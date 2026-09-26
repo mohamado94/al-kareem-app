@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Al-Kareem</string>
+    <string name="title_activity_main">Al-Kareem</string>
+    <string name="package_name">com.alkareem.app</string>
+    <string name="custom_url_scheme">com.alkareem.app</string>
+</resources>

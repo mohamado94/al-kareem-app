@@ -1,0 +1,28 @@
+{
+  "name": "Al-Kareem — الكريم",
+  "short_name": "Al-Kareem",
+  "description": "Apprenez la langue arabe avec une expérience élégante et premium.",
+  "start_url": "/",
+  "id": "/",
+  "scope": "/",
+  "lang": "fr",
+  "display": "standalone",
+  "background_color": "#e9e0cf",
+  "theme_color": "#e9e0cf",
+  "orientation": "any",
+  "categories": ["education"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

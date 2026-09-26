@@ -1,0 +1,268 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-gold: var(--gold-primary);
+  --color-gold-soft: var(--gold-light);
+
+  --font-sans: var(--font-jakarta), var(--font-amiri), 'Amiri', ui-sans-serif,
+    system-ui, sans-serif;
+  --font-arabic: var(--font-amiri), 'Amiri', serif;
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+}
+
+:root {
+  color-scheme: light;
+
+  /* Champagne gold design tokens — single source of truth */
+  --gold-primary: #d39a32;
+  --gold-medium: #e2b34e;
+  --gold-light: #f1cf77;
+  --gold-highlight: #ffe9a8;
+  --gold-deep: #b87818;
+    --gold-readable: #a87312;
+    --gold-readable-soft: #c7942e;
+
+  /* Warm light parchment / aged-canvas base */
+  --background: oklch(0.915 0.018 84);
+  --foreground: oklch(0.3 0.022 55);
+
+  --card: oklch(0.955 0.014 86);
+  --card-foreground: oklch(0.3 0.022 55);
+
+  --popover: oklch(0.965 0.012 86);
+  --popover-foreground: oklch(0.3 0.022 55);
+
+  /* Champagne gold as primary accent */
+  --primary: var(--gold-primary);
+  --primary-foreground: oklch(0.22 0.03 55);
+
+  --secondary: oklch(0.86 0.016 84);
+  --secondary-foreground: oklch(0.32 0.022 58);
+
+  --muted: oklch(0.88 0.014 84);
+  --muted-foreground: oklch(0.48 0.018 60);
+
+  --accent: oklch(0.84 0.018 84);
+  --accent-foreground: oklch(0.3 0.022 58);
+
+  --destructive: oklch(0.55 0.19 25);
+  --success: oklch(0.55 0.12 150);
+
+  --border: oklch(0.42 0.02 58 / 16%);
+  --input: oklch(0.42 0.02 58 / 20%);
+  --ring: var(--gold-medium);
+
+  /* Champagne gold ramp for gradients and progress */
+  --silver-hi: var(--gold-highlight);
+  --silver-mid: var(--gold-medium);
+  --silver-lo: var(--gold-primary);
+
+  --relief-bg: linear-gradient(
+    155deg,
+    oklch(0.97 0.014 88) 0%,
+    oklch(0.9 0.024 82) 78%
+  );
+  --relief-glow: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--gold-medium) 28%, transparent),
+    transparent 70%
+  );
+
+  --radius: 0.9rem;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    background-image:
+      radial-gradient(
+        circle at 20% 15%,
+        oklch(0.97 0.014 88 / 0.6),
+        transparent 55%
+      ),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+    background-attachment: fixed, fixed;
+  }
+}
+
+@layer utilities {
+  .font-arabic {
+    font-family: var(--font-arabic);
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Readable gold for prominent headings and hero glyphs. */
+  .gold-text {
+    background: linear-gradient(
+      135deg,
+      #a66f0d 0%,
+      #c9952d 38%,
+      #b77d16 62%,
+      #d0a13b 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter:
+      drop-shadow(0 1px 0 rgb(255 255 255 / 38%));
+  }
+
+  /* Tailwind's primary text color is intentionally darker than primary fills. */
+  .text-primary {
+    color: var(--gold-readable);
+  }
+
+  /* Polished champagne gold fill for chips, buttons, progress bars */
+  .gold-gradient {
+    background: linear-gradient(
+      135deg,
+      var(--gold-highlight) 0%,
+      var(--gold-light) 28%,
+      var(--gold-medium) 55%,
+      var(--gold-primary) 100%
+    );
+    box-shadow:
+      0 1px 0 rgb(255 250 225 / 68%) inset,
+      0 0 13px rgb(236 183 73 / 18%);
+  }
+
+  /* Brighter gold reserved for the two main home actions. */
+  .gold-gradient-bright {
+    background: linear-gradient(
+      135deg,
+      #fff0bd 0%,
+      #f5d27b 30%,
+      #dfa84d 68%,
+      #c88d32 100%
+    );
+    box-shadow:
+      0 1px 0 rgb(255 250 225 / 72%) inset,
+      0 0 16px rgb(236 193 102 / 22%);
+  }
+
+  /* Progress ring / stroke using champagne gold */
+  .gold-stroke {
+    stroke: url(#gold-stroke-gradient);
+  }
+
+  /* Original warm grey-beige used by the secondary audio control. */
+  .classic-secondary-control {
+    background: oklch(0.855 0.012 78);
+    box-shadow: 0 1px 0 oklch(0.96 0.01 84 / 55%) inset;
+  }
+
+  .relief-panel {
+    background: var(--relief-bg);
+    border: 1px solid color-mix(in srgb, var(--gold-medium) 42%, transparent);
+    box-shadow:
+      0 1px 0 oklch(0.99 0.01 90 / 0.7) inset,
+      0 10px 24px -14px oklch(0.4 0.06 60 / 0.4);
+  }
+}
+
+/* Any open modal freezes the application exactly where it was opened. */
+body:has([aria-modal="true"]) [data-app-scroll] {
+  overflow: hidden !important;
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
+[aria-modal="true"] {
+  overscroll-behavior: contain;
+}
+
+@keyframes akFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes akRingPulse {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.7;
+  }
+  70% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes akSpinSlow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes akShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-fade-up {
+  animation: akFadeUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+/* Keep vocabulary table headings readable on narrow screens without horizontal scrolling. */
+.table-fixed th {
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+}
+
+@media (max-width: 640px) {
+  .table-fixed th {
+    padding-inline: 0.35rem;
+    font-size: 0.7rem;
+  }
+}
