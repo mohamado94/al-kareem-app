@@ -62,6 +62,39 @@ function optionQuestion(
   return { id, module, promptGlyph, audioText, options, answerIndex: options.indexOf(correct) }
 }
 
+/** The displayed prompt must never be the expected answer itself. */
+export function promptRevealsAnswer(question: DailyQuestion) {
+  const answer = question.options[question.answerIndex]?.text.trim()
+  const prompt = question.promptGlyph?.trim()
+  return Boolean(answer && prompt && (prompt === answer || prompt.includes(answer)))
+}
+
+/** Number of choices sitting at the same slot in two consecutive questions. */
+export function sharedSlots(previous: DailyQuestion, current: DailyQuestion) {
+  return current.options.filter((option, index) => previous.options[index]?.text === option.text).length
+}
+
+/**
+ * Re-permutes the options of `current` (deterministically, with the session
+ * PRNG) when its layout would echo the previous question: shared choices kept
+ * at the same slot (the "only one choice changed" pattern) or the correct
+ * answer staying in the same slot for a third question in a row.
+ */
+function decorrelate(previous: DailyQuestion[], current: DailyQuestion, rnd: () => number): DailyQuestion {
+  const last = previous[previous.length - 1]
+  const beforeLast = previous[previous.length - 2]
+  if (!last) return current
+  const correct = current.options[current.answerIndex]
+  let best = current
+  for (let attempt = 0; attempt < 12; attempt++) {
+    const sameAnswerRun = Boolean(beforeLast && last.answerIndex === best.answerIndex && beforeLast.answerIndex === best.answerIndex)
+    if (sharedSlots(last, best) === 0 && !sameAnswerRun) return best
+    const options = shuffle(current.options, rnd)
+    best = { ...current, options, answerIndex: options.indexOf(correct) }
+  }
+  return best
+}
+
 /**
  * Builds a shuffled session from the complete learning catalogue. The optional
  * session seed keeps an in-progress quiz stable across reloads, while a new
@@ -204,5 +237,9 @@ export function buildDailyQuestions(
   const count = 8 + (hash(`${day}|count|${exerciseType}|${sessionSeed}`) % 3)
   const selected = shuffledPools.flatMap((pool) => pool[0] ? [pool[0]] : [])
   const remaining = shuffle(shuffledPools.flatMap((pool) => pool.slice(1)), rnd)
-  return shuffle([...selected, ...remaining.slice(0, Math.max(0, count - selected.length))], rnd)
+  const ordered = shuffle([...selected, ...remaining.slice(0, Math.max(0, count - selected.length))], rnd)
+    .filter((question) => question.options.length >= 2 && question.answerIndex >= 0 && !promptRevealsAnswer(question))
+  const session: DailyQuestion[] = []
+  for (const question of ordered) session.push(decorrelate(session, question, rnd))
+  return session
 }

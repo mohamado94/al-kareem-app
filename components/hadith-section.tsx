@@ -5,30 +5,9 @@ import { useI18n } from '@/lib/i18n'
 import { localized } from '@/lib/i18n-content'
 import { ListenCircle } from '@/components/audio-button'
 import { HADITHS } from '@/lib/data'
+import { dailyHadithIndex } from '@/lib/daily-hadith'
 
-function hash(text: string) {
-  let value = 2166136261
-  for (let index = 0; index < text.length; index++) {
-    value ^= text.charCodeAt(index)
-    value = Math.imul(value, 16777619)
-  }
-  return value >>> 0
-}
-
-/** A stable local-calendar rotation with no consecutive repetition. */
-export function dailyHadithIndex(date: Date, count: number) {
-  if (count <= 1) return 0
-  const year = date.getFullYear()
-  const dayOfYear = Math.floor((Date.UTC(year, date.getMonth(), date.getDate()) - Date.UTC(year, 0, 1)) / 86_400_000)
-  const order = Array.from({ length: count }, (_, index) => index)
-  let state = hash(String(year)) || 1
-  for (let index = order.length - 1; index > 0; index--) {
-    state = Math.imul(state ^ (state >>> 15), 1 | state)
-    const target = (state >>> 0) % (index + 1)
-    ;[order[index], order[target]] = [order[target], order[index]]
-  }
-  return order[dayOfYear % count]
-}
+export { dailyHadithIndex }
 
 export function HadithSection() {
   const { t, lang } = useI18n()
