@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import webpush from 'web-push'
 import { getDb, isDatabaseConfigured } from '@/lib/db'
+import { HADITHS } from '@/lib/data'
+import { buildDailyHadithNotification, notificationDay } from '@/lib/daily-hadith'
 
 const REMINDER_MESSAGES: Record<string, { title: string; body: string }> = {
   fr: {
@@ -132,5 +134,82 @@ export async function GET(request: Request) {
 
   }
 
-  return NextResponse.json({ ok: true, sent })
+  const hadithSent = await sendDailyHadith(sql)
+
+  return NextResponse.json({ ok: true, sent, hadithSent })
+}
+
+type Sql = ReturnType<typeof getDb>
+
+/**
+ * Sends the "Hadith of the day" to every user who enabled notifications and
+ * still has a push subscription. Each user is claimed atomically for the
+ * current UTC day (last_daily_hadith_sent_on), so a repeated or concurrent
+ * cron invocation cannot notify the same user twice on the same day. Users who
+ * disabled notifications are excluded by the WHERE clause.
+ */
+async function sendDailyHadith(sql: Sql): Promise<number | 'migration-required'> {
+  const now = new Date()
+  const today = notificationDay(now)
+  let sentCount = 0
+  let candidates
+  try {
+    candidates = await sql`
+      SELECT u.id, u.preferred_lang, u.last_daily_hadith_sent_on
+      FROM users u
+      WHERE u.notifications_enabled = true
+        AND (u.last_daily_hadith_sent_on IS NULL OR u.last_daily_hadith_sent_on < ${today}::date)
+        AND EXISTS (SELECT 1 FROM push_subscriptions s WHERE s.user_id = u.id)
+    `
+  } catch (error) {
+    // 42703 = undefined column: migration 004 has not been applied yet.
+    if (typeof error === 'object' && error && 'code' in error && error.code === '42703') return 'migration-required'
+    throw error
+  }
+
+  for (const profile of candidates) {
+    const claimed = await sql`
+      UPDATE users
+      SET last_daily_hadith_sent_on = ${today}::date
+      WHERE id = ${profile.id}
+        AND notifications_enabled = true
+        AND (last_daily_hadith_sent_on IS NULL OR last_daily_hadith_sent_on < ${today}::date)
+      RETURNING id
+    `
+    if (claimed.length === 0) continue
+
+    const payload = buildDailyHadithNotification(HADITHS, profile.preferred_lang, now)
+    if (!payload) break
+    const subs = await sql`
+      SELECT endpoint, p256dh, auth FROM push_subscriptions WHERE user_id = ${profile.id}
+    `
+    let sentForUser = 0
+    for (const sub of subs) {
+      try {
+        await webpush.sendNotification(
+          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+          JSON.stringify({ title: payload.title, body: payload.body, icon: payload.icon, tag: payload.tag }),
+        )
+        sentForUser++
+        sentCount++
+      } catch (error) {
+        const statusCode = typeof error === 'object' && error && 'statusCode' in error
+          ? Number(error.statusCode)
+          : 0
+        if (statusCode === 404 || statusCode === 410) {
+          await sql`DELETE FROM push_subscriptions WHERE endpoint = ${sub.endpoint}`
+        }
+      }
+    }
+
+    // Nothing delivered: release the claim so a later run the same day may retry.
+    if (sentForUser === 0) {
+      await sql`
+        UPDATE users
+        SET last_daily_hadith_sent_on = ${profile.last_daily_hadith_sent_on ?? null}
+        WHERE id = ${profile.id} AND last_daily_hadith_sent_on = ${today}::date
+      `
+    }
+  }
+  return sentCount
 }

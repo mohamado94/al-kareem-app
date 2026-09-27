@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import { useI18n, type Lang } from '@/lib/i18n'
 import { localized } from '@/lib/i18n-content'
+import { seededShuffle } from '@/lib/exercise-shuffle'
 import { useProgress } from '@/lib/progress/context'
 import { ScreenHeader, ProgressBar, ProgressRing, accentClass } from '@/components/ui-bits'
 import { ListenButton, ListenCircle, PronounceButton } from '@/components/audio-button'
@@ -2227,19 +2228,22 @@ function exerciseHash(value: string, seed = 0) {
 }
 
 export function variedWordOptions(correct: Word, alternatives: Word[], seed: number, meaningKey?: Lang) {
-  const seen = new Set<string>()
+  const keyOf = (item: Word) => meaningKey ? localized(item.meaning, meaningKey) : item.word
+  // The correct answer's own label is reserved: a distractor displaying the
+  // same text would create a second valid answer.
+  const seen = new Set<string>([keyOf(correct)])
   const candidates = alternatives.filter((item) => {
     if (item.word === correct.word) return false
-    const key = meaningKey ? localized(item.meaning, meaningKey) : item.word
+    const key = keyOf(item)
     if (seen.has(key)) return false
     seen.add(key)
     return true
   })
-  const distractors = candidates
-    .sort((a, b) => exerciseHash(a.word, seed) - exerciseHash(b.word, seed))
-    .slice(0, 3)
-  return [correct, ...distractors]
-    .sort((a, b) => exerciseHash(a.word, seed + 7919) - exerciseHash(b.word, seed + 7919))
+  // The question identity is part of the shuffle key: each question gets its
+  // own distractors and a complete, independent repositioning of all choices.
+  const questionKey = `${seed}|${correct.word}|${meaningKey ?? ''}`
+  const distractors = seededShuffle(candidates, `${questionKey}|distractors`).slice(0, 3)
+  return seededShuffle([correct, ...distractors], `${questionKey}|order`)
 }
 
 function writingPiecesFor(word: string, variationSeed = 0) {
@@ -2791,21 +2795,17 @@ function GuidedLanguageLesson({ persistenceKey, title, lessonNote, words, allWor
       {exercise.kind === 'build' && (() => {
         const correctTokens = exercise.word.word.trim().split(/\s+/)
         const distractorCount = Math.max(3, 5 - correctTokens.length)
-        const distractorTokens = Array.from(new Set(
+        const distractorPool = Array.from(new Set(
           allWords
             .filter((word) => word.word !== exercise.word.word)
             .flatMap((word) => word.word.trim().split(/\s+/))
             .filter((token) => !correctTokens.includes(token)),
         ))
-          .sort((a, b) => {
-            const tokenScore = (token: string) => Array.from(token).reduce((sum, character) => sum * 31 + character.charCodeAt(0), choiceSeed + activeExerciseIndex * 97 + reviewRound * 1009)
-            return tokenScore(a) - tokenScore(b)
-          })
+        // Seeded Fisher–Yates (the previous numeric score overflowed to
+        // seed-independent values for long tokens).
+        const distractorTokens = seededShuffle(distractorPool, `${choiceSeed}|${activeExerciseIndex}|${reviewRound}|build-distractors`)
           .slice(0, distractorCount)
-        const available = [...correctTokens, ...distractorTokens].sort((a, b) => {
-          const tokenScore = (token: string) => Array.from(token).reduce((sum, character) => sum * 37 + character.charCodeAt(0), choiceSeed + activeExerciseIndex * 53 + reviewRound * 1013)
-          return tokenScore(a) - tokenScore(b)
-        })
+        const available = seededShuffle([...correctTokens, ...distractorTokens], `${choiceSeed}|${activeExerciseIndex}|${reviewRound}|build-order`)
         const complete = builtTokens.length === correctTokens.length
         const correct = complete && builtTokens.every((token, index) => token === correctTokens[index])
         return <section className="rounded-3xl border border-border bg-card p-5 text-center">
