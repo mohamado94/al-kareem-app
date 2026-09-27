@@ -963,6 +963,7 @@ const READING_WORD_SERIES: ReadingWordSeries[] = [
 ]
 
 function ReadingWordCard({ word }: { word: ReadingWord }) {
+  const { t } = useI18n()
   const [showMeaning, setShowMeaning] = useState(false)
   const [listening, setListening] = useState(false)
   const listen = async () => {
@@ -975,14 +976,15 @@ function ReadingWordCard({ word }: { word: ReadingWord }) {
     <p dir="rtl" className="font-arabic mt-4 text-5xl font-bold leading-[1.5] text-foreground">{word.arabic}</p>
     <p className="mt-1 text-base font-semibold tracking-wide text-muted-foreground">{word.phonetic}</p>
     <div className="mt-4 grid grid-cols-2 gap-2">
-      <button type="button" onClick={listen} disabled={listening} className="rounded-2xl border border-border bg-secondary px-3 py-3 text-sm font-semibold text-foreground disabled:opacity-60">{listening ? 'Écoute…' : 'Écouter'}</button>
-      <button type="button" onClick={() => setShowMeaning((shown) => !shown)} className="rounded-2xl border border-primary/30 bg-primary/10 px-3 py-3 text-sm font-semibold text-primary">Voir le sens</button>
+      <button type="button" onClick={listen} disabled={listening} className="rounded-2xl border border-border bg-secondary px-3 py-3 text-sm font-semibold text-foreground disabled:opacity-60">{listening ? `${t('learn.listeningShort')}…` : t('learn.listen')}</button>
+      <button type="button" onClick={() => setShowMeaning((shown) => !shown)} className="rounded-2xl border border-primary/30 bg-primary/10 px-3 py-3 text-sm font-semibold text-primary">{t('learn.showMeaning')}</button>
     </div>
     {showMeaning && <p className="mt-3 rounded-2xl bg-secondary px-3 py-2 font-semibold">{word.meaning}</p>}
   </article>
 }
 
 function ReadingWordsChapter({ onBack }: { onBack: () => void }) {
+  const { t } = useI18n()
   const words = READING_WORD_SERIES.flatMap((series) => series.words)
   const [wordIndex, setWordIndex] = useState(0)
   const [reviewIndex, setReviewIndex] = useState<number | null>(null)
@@ -1010,23 +1012,23 @@ function ReadingWordsChapter({ onBack }: { onBack: () => void }) {
       setSelectedAnswer(null)
     }
     if (finished) return <div>
-      <BackBar title="Révision finale" onBack={onBack} />
+      <BackBar title={t('learn.finalReview')} onBack={onBack} />
       <div className="px-5 pb-10 pt-8 text-center">
         <div className="mx-auto max-w-md rounded-3xl border border-border bg-card p-6 shadow-sm">
           <CheckCircle2 className="mx-auto h-14 w-14 text-primary" />
-          <h2 className="gold-text mt-4 text-2xl font-bold">Révision terminée</h2>
-          <p className="mt-2 text-muted-foreground">Vous avez révisé les 30 mots.</p>
+          <h2 className="gold-text mt-4 text-2xl font-bold">{t('learn.reviewCompleted')}</h2>
+          <p className="mt-2 text-muted-foreground">{t('learn.reviewedWords')}</p>
           <p className="mt-5 text-4xl font-bold text-primary">{score} / {words.length}</p>
-          <button type="button" onClick={() => { setReviewIndex(0); setSelectedAnswer(null); setScore(0); setFinished(false) }} className="gold-gradient mt-6 w-full rounded-2xl py-3.5 font-semibold text-primary-foreground">Recommencer la révision</button>
+          <button type="button" onClick={() => { setReviewIndex(0); setSelectedAnswer(null); setScore(0); setFinished(false) }} className="gold-gradient mt-6 w-full rounded-2xl py-3.5 font-semibold text-primary-foreground">{t('learn.restartReview')}</button>
         </div>
       </div>
     </div>
     return <div>
-      <BackBar title="Révision finale" onBack={onBack} />
+      <BackBar title={t('learn.finalReview')} onBack={onBack} />
       <div className="mx-auto max-w-xl px-5 pb-10 pt-5">
         <div className="mb-4 flex items-center gap-3"><ProgressBar value={((reviewIndex + 1) / words.length) * 100} className="h-2 flex-1" /><span className="text-xs font-bold text-primary">{reviewIndex + 1}/{words.length}</span></div>
         <div className="rounded-3xl border border-border bg-card p-6 text-center shadow-sm">
-          <p className="text-sm font-semibold text-muted-foreground">Quel mot correspond à cette image ?</p>
+          <p className="text-sm font-semibold text-muted-foreground">{t('learn.wordForImage')}</p>
           <div role="img" aria-label={word.meaning} className="mx-auto mt-5 flex h-32 w-32 items-center justify-center rounded-3xl bg-secondary text-7xl">{word.image}</div>
           <div className="mt-6 grid grid-cols-2 gap-3">{options.map((option) => {
             const correct = option.arabic === word.arabic
@@ -1034,7 +1036,7 @@ function ReadingWordsChapter({ onBack }: { onBack: () => void }) {
             const stateClass = selectedAnswer ? (correct ? 'border-emerald-500 bg-emerald-500/10 text-emerald-700' : chosen ? 'border-red-500 bg-red-500/10 text-red-700' : 'border-border bg-background') : 'border-border bg-background'
             return <button key={option.arabic} type="button" onClick={() => choose(option.arabic)} className={`font-arabic rounded-2xl border p-4 text-2xl font-bold ${stateClass}`}>{option.arabic}</button>
           })}</div>
-          {selectedAnswer && <div className="mt-5"><p className="font-semibold">{selectedAnswer === word.arabic ? 'Bonne réponse' : `Réponse correcte : ${word.arabic}`}</p><p className="mt-1 text-sm text-muted-foreground">{word.meaning}</p><button type="button" onClick={nextQuestion} className="gold-gradient mt-4 w-full rounded-2xl py-3.5 font-semibold text-primary-foreground">{reviewIndex === words.length - 1 ? 'Voir mon résultat' : 'Question suivante'}</button></div>}
+          {selectedAnswer && <div className="mt-5"><p className="font-semibold">{selectedAnswer === word.arabic ? t('learn.goodAnswer') : `${t('learn.correctAnswerLabel')} ${word.arabic}`}</p><p className="mt-1 text-sm text-muted-foreground">{word.meaning}</p><button type="button" onClick={nextQuestion} className="gold-gradient mt-4 w-full rounded-2xl py-3.5 font-semibold text-primary-foreground">{reviewIndex === words.length - 1 ? t('learn.seeResult') : t('learn.nextQuestion')}</button></div>}
         </div>
       </div>
     </div>
@@ -1047,32 +1049,32 @@ function ReadingWordsChapter({ onBack }: { onBack: () => void }) {
   if (seriesBreak) {
     const finalSeries = seriesIndex === READING_WORD_SERIES.length - 1
     return <div>
-      <BackBar title="Lire des mots" onBack={onBack} />
+      <BackBar title={t('learn.readWords')} onBack={onBack} />
       <div className="mx-auto max-w-xl px-5 pb-10 pt-8 text-center">
         <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
           <CheckCircle2 className="mx-auto h-14 w-14 text-primary" />
-          <p className="mt-4 text-xs font-bold uppercase tracking-[0.14em] text-primary">Série {seriesIndex + 1} sur {READING_WORD_SERIES.length}</p>
-          <h2 className="gold-text mt-2 text-2xl font-bold">Série terminée</h2>
-          <p className="mt-2 text-sm text-muted-foreground">Vous avez étudié les six mots de cette série.</p>
+          <p className="mt-4 text-xs font-bold uppercase tracking-[0.14em] text-primary">{t('learn.series')} {seriesIndex + 1} {t('ex.of')} {READING_WORD_SERIES.length}</p>
+          <h2 className="gold-text mt-2 text-2xl font-bold">{t('learn.seriesCompleted')}</h2>
+          <p className="mt-2 text-sm text-muted-foreground">{t('learn.studiedSixWords')}</p>
           <button type="button" onClick={() => {
             if (finalSeries) setReviewIndex(0)
             else setWordIndex((current) => current + 1)
             setSeriesBreak(false)
-          }} className="gold-gradient mt-6 w-full rounded-2xl py-3.5 font-semibold text-primary-foreground">{finalSeries ? 'Commencer la révision finale' : `Passer à la série ${seriesIndex + 2}`}</button>
-          <button type="button" onClick={onBack} className="mt-3 w-full rounded-2xl border border-border bg-background py-3.5 font-semibold">Retour</button>
+          }} className="gold-gradient mt-6 w-full rounded-2xl py-3.5 font-semibold text-primary-foreground">{finalSeries ? t('learn.startFinalReview') : `${t('learn.nextSeries')} ${seriesIndex + 2}`}</button>
+          <button type="button" onClick={onBack} className="mt-3 w-full rounded-2xl border border-border bg-background py-3.5 font-semibold">{t('common.back')}</button>
         </div>
       </div>
     </div>
   }
   return <div>
-    <BackBar title="Lire des mots" onBack={onBack} />
+    <BackBar title={t('learn.readWords')} onBack={onBack} />
     <div className="mx-auto max-w-xl px-5 pb-10 pt-5">
-      <p className="text-xs font-bold uppercase tracking-[0.14em] text-primary">Série {seriesIndex + 1} sur {READING_WORD_SERIES.length}</p>
+      <p className="text-xs font-bold uppercase tracking-[0.14em] text-primary">{t('learn.series')} {seriesIndex + 1} {t('ex.of')} {READING_WORD_SERIES.length}</p>
       <h2 className="gold-text mt-1 text-lg font-bold">{READING_WORD_SERIES[seriesIndex].title.replace(/^Série \d+ — /, '')}</h2>
       <div className="mt-4 flex items-center gap-3"><ProgressBar value={((positionInSeries + 1) / 6) * 100} className="h-2 flex-1" /><span className="text-xs font-bold text-primary">{positionInSeries + 1}/6</span></div>
       <div className="mt-5"><ReadingWordCard key={word.arabic} word={word} /></div>
       <button type="button" onClick={() => endOfSeries ? setSeriesBreak(true) : setWordIndex((current) => current + 1)} className="gold-gradient mt-5 flex w-full items-center justify-center gap-2 rounded-2xl py-4 font-semibold text-primary-foreground">
-        {endOfSeries ? 'Terminer la série' : 'Suivant'}
+        {endOfSeries ? t('learn.finishSeries') : t('ex.next')}
         <ChevronRight className="h-5 w-5" />
       </button>
     </div>
@@ -1109,6 +1111,7 @@ const READING_SENTENCES: ReadingSentence[] = [
 ]
 
 function ReadingSentenceCard({ sentence }: { sentence: ReadingSentence }) {
+  const { t } = useI18n()
   const [showMeaning, setShowMeaning] = useState(false)
   const [listening, setListening] = useState(false)
   const listen = async () => {
@@ -1121,14 +1124,15 @@ function ReadingSentenceCard({ sentence }: { sentence: ReadingSentence }) {
     <p dir="rtl" className="font-arabic mt-5 text-4xl font-bold leading-[1.8] text-foreground">{sentence.arabic}</p>
     <p className="mt-2 text-base font-semibold leading-relaxed text-muted-foreground">{sentence.phonetic}</p>
     <div className="mt-5 grid grid-cols-2 gap-2">
-      <button type="button" onClick={listen} disabled={listening} className="rounded-2xl border border-border bg-secondary px-3 py-3 text-sm font-semibold text-foreground disabled:opacity-60">{listening ? 'Écoute…' : 'Écouter'}</button>
-      <button type="button" onClick={() => setShowMeaning((shown) => !shown)} className="rounded-2xl border border-primary/30 bg-primary/10 px-3 py-3 text-sm font-semibold text-primary">Voir le sens</button>
+      <button type="button" onClick={listen} disabled={listening} className="rounded-2xl border border-border bg-secondary px-3 py-3 text-sm font-semibold text-foreground disabled:opacity-60">{listening ? `${t('learn.listeningShort')}…` : t('learn.listen')}</button>
+      <button type="button" onClick={() => setShowMeaning((shown) => !shown)} className="rounded-2xl border border-primary/30 bg-primary/10 px-3 py-3 text-sm font-semibold text-primary">{t('learn.showMeaning')}</button>
     </div>
     {showMeaning && <p className="mt-3 rounded-2xl bg-secondary px-3 py-3 font-semibold">{sentence.translation}</p>}
   </article>
 }
 
 function ReadingSentencesChapter({ onBack }: { onBack: () => void }) {
+  const { t } = useI18n()
   const [index, setIndex] = useState(0)
   const [seriesFinished, setSeriesFinished] = useState(false)
   const [reviewIndex, setReviewIndex] = useState<number | null>(null)
@@ -1150,13 +1154,13 @@ function ReadingSentencesChapter({ onBack }: { onBack: () => void }) {
       if (reviewIndex === READING_SENTENCES.length - 1) setReviewFinished(true)
       else { setReviewIndex(reviewIndex + 1); setSelectedAnswer(null) }
     }
-    if (reviewFinished) return <div><BackBar title="Révision des phrases" onBack={onBack} /><div className="px-5 pb-10 pt-8 text-center"><div className="mx-auto max-w-xl rounded-3xl border border-border bg-card p-6 shadow-sm"><CheckCircle2 className="mx-auto h-14 w-14 text-primary"/><h2 className="gold-text mt-4 text-2xl font-bold">Révision terminée</h2><p className="mt-2 text-muted-foreground">Vous avez révisé les 24 phrases.</p><p className="mt-5 text-4xl font-bold text-primary">{score} / 24</p><button type="button" onClick={() => { setReviewIndex(0); setSelectedAnswer(null); setScore(0); setReviewFinished(false) }} className="gold-gradient mt-6 w-full rounded-2xl py-3.5 font-semibold text-primary-foreground">Recommencer la révision</button></div></div></div>
+    if (reviewFinished) return <div><BackBar title={t('learn.sentenceReview')} onBack={onBack} /><div className="px-5 pb-10 pt-8 text-center"><div className="mx-auto max-w-xl rounded-3xl border border-border bg-card p-6 shadow-sm"><CheckCircle2 className="mx-auto h-14 w-14 text-primary"/><h2 className="gold-text mt-4 text-2xl font-bold">{t('learn.reviewCompleted')}</h2><p className="mt-2 text-muted-foreground">{t('learn.reviewedSentences')}</p><p className="mt-5 text-4xl font-bold text-primary">{score} / 24</p><button type="button" onClick={() => { setReviewIndex(0); setSelectedAnswer(null); setScore(0); setReviewFinished(false) }} className="gold-gradient mt-6 w-full rounded-2xl py-3.5 font-semibold text-primary-foreground">{t('learn.restartReview')}</button></div></div></div>
     return <div>
-      <BackBar title="Révision des phrases" onBack={onBack} />
+      <BackBar title={t('learn.sentenceReview')} onBack={onBack} />
       <div className="mx-auto max-w-xl px-5 pb-10 pt-5">
         <div className="mb-4 flex items-center gap-3"><ProgressBar value={((reviewIndex + 1) / 24) * 100} className="h-2 flex-1"/><span className="text-xs font-bold text-primary">{reviewIndex + 1}/24</span></div>
         <div className="rounded-3xl border border-border bg-card p-6 text-center shadow-sm">
-          <p className="text-sm font-semibold text-muted-foreground">Quelle phrase correspond à cette image ?</p>
+          <p className="text-sm font-semibold text-muted-foreground">{t('learn.sentenceForImage')}</p>
           <div role="img" aria-label={sentence.translation} className="mx-auto mt-5 flex h-28 w-40 items-center justify-center rounded-3xl bg-secondary text-5xl">{sentence.image}</div>
           <div className="mt-6 space-y-3">{options.map((option) => {
             const correct = option.arabic === sentence.arabic
@@ -1164,24 +1168,24 @@ function ReadingSentencesChapter({ onBack }: { onBack: () => void }) {
             const stateClass = selectedAnswer ? (correct ? 'border-emerald-500 bg-emerald-500/10 text-emerald-700' : chosen ? 'border-red-500 bg-red-500/10 text-red-700' : 'border-border bg-background') : 'border-border bg-background'
             return <button key={option.arabic} type="button" onClick={() => choose(option.arabic)} dir="rtl" className={`font-arabic w-full rounded-2xl border p-3 text-xl font-bold leading-relaxed ${stateClass}`}>{option.arabic}</button>
           })}</div>
-          {selectedAnswer && <div className="mt-5"><p className="font-semibold">{selectedAnswer === sentence.arabic ? 'Bonne réponse' : `Réponse correcte : ${sentence.arabic}`}</p><p className="mt-1 text-sm text-muted-foreground">{sentence.translation}</p><button type="button" onClick={next} className="gold-gradient mt-4 w-full rounded-2xl py-3.5 font-semibold text-primary-foreground">{reviewIndex === 23 ? 'Voir mon résultat' : 'Question suivante'}</button></div>}
+          {selectedAnswer && <div className="mt-5"><p className="font-semibold">{selectedAnswer === sentence.arabic ? t('learn.goodAnswer') : `${t('learn.correctAnswerLabel')} ${sentence.arabic}`}</p><p className="mt-1 text-sm text-muted-foreground">{sentence.translation}</p><button type="button" onClick={next} className="gold-gradient mt-4 w-full rounded-2xl py-3.5 font-semibold text-primary-foreground">{reviewIndex === 23 ? t('learn.seeResult') : t('learn.nextQuestion')}</button></div>}
         </div>
       </div>
     </div>
   }
 
   if (seriesFinished) return <div>
-    <BackBar title="Lire des phrases" onBack={onBack} />
-    <div className="mx-auto max-w-xl px-5 pb-10 pt-8 text-center"><div className="rounded-3xl border border-border bg-card p-6 shadow-sm"><CheckCircle2 className="mx-auto h-14 w-14 text-primary"/><h2 className="gold-text mt-4 text-2xl font-bold">Série terminée</h2><p className="mt-2 text-sm text-muted-foreground">Vous avez étudié les 24 phrases.</p><button type="button" onClick={() => setReviewIndex(0)} className="gold-gradient mt-6 w-full rounded-2xl py-3.5 font-semibold text-primary-foreground">Commencer la révision finale</button><button type="button" onClick={onBack} className="mt-3 w-full rounded-2xl border border-border bg-background py-3.5 font-semibold">Retour</button></div></div>
+    <BackBar title={t('learn.readSentences')} onBack={onBack} />
+    <div className="mx-auto max-w-xl px-5 pb-10 pt-8 text-center"><div className="rounded-3xl border border-border bg-card p-6 shadow-sm"><CheckCircle2 className="mx-auto h-14 w-14 text-primary"/><h2 className="gold-text mt-4 text-2xl font-bold">{t('learn.seriesCompleted')}</h2><p className="mt-2 text-sm text-muted-foreground">{t('learn.studiedSentences')}</p><button type="button" onClick={() => setReviewIndex(0)} className="gold-gradient mt-6 w-full rounded-2xl py-3.5 font-semibold text-primary-foreground">{t('learn.startFinalReview')}</button><button type="button" onClick={onBack} className="mt-3 w-full rounded-2xl border border-border bg-background py-3.5 font-semibold">{t('common.back')}</button></div></div>
   </div>
 
   const sentence = READING_SENTENCES[index]
   return <div>
-    <BackBar title="Lire des phrases" onBack={onBack} />
+    <BackBar title={t('learn.readSentences')} onBack={onBack} />
     <div className="mx-auto max-w-xl px-5 pb-10 pt-5">
       <div className="mb-4 flex items-center gap-3"><ProgressBar value={((index + 1) / 24) * 100} className="h-2 flex-1"/><span className="text-xs font-bold text-primary">{index + 1}/24</span></div>
       <ReadingSentenceCard key={sentence.arabic} sentence={sentence} />
-      <button type="button" onClick={() => index === 23 ? setSeriesFinished(true) : setIndex((current) => current + 1)} className="gold-gradient mt-5 flex w-full items-center justify-center gap-2 rounded-2xl py-4 font-semibold text-primary-foreground">{index === 23 ? 'Terminer la série' : 'Suivant'}<ChevronRight className="h-5 w-5"/></button>
+      <button type="button" onClick={() => index === 23 ? setSeriesFinished(true) : setIndex((current) => current + 1)} className="gold-gradient mt-5 flex w-full items-center justify-center gap-2 rounded-2xl py-4 font-semibold text-primary-foreground">{index === 23 ? t('learn.finishSeries') : t('ex.next')}<ChevronRight className="h-5 w-5"/></button>
     </div>
   </div>
 }
@@ -1234,19 +1238,20 @@ const READING_SHORT_TEXTS: ReadingShortText[] = [
 ]
 
 function ReadingShortTextsChapter({ onBack }: { onBack: () => void }) {
+  const { t } = useI18n()
   const [index, setIndex] = useState(0)
   const text = READING_SHORT_TEXTS[index]
   return <div>
-    <BackBar title="Lire des textes courts" onBack={onBack} />
+    <BackBar title={t('learn.readShortTexts')} onBack={onBack} />
     <div className="mx-auto max-w-2xl px-5 pb-10 pt-5">
       <div className="mb-4 flex items-center gap-3"><ProgressBar value={((index + 1) / READING_SHORT_TEXTS.length) * 100} className="h-2 flex-1"/><span className="text-xs font-bold text-primary">{index + 1}/{READING_SHORT_TEXTS.length}</span></div>
       <article className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-        <div className="flex items-start justify-between gap-4"><h2 className="gold-text text-xl font-bold">{text.title}</h2><a href={text.source} target="_blank" rel="noreferrer" className="shrink-0 text-xs font-semibold text-primary underline">Source</a></div>
+        <div className="flex items-start justify-between gap-4"><h2 className="gold-text text-xl font-bold">{text.title}</h2><a href={text.source} target="_blank" rel="noreferrer" className="shrink-0 text-xs font-semibold text-primary underline">{t('learn.source')}</a></div>
         <p dir="rtl" className="font-arabic mt-6 text-3xl font-bold leading-[2] text-foreground">{text.arabic}</p>
-        <div className="mt-6 border-t border-border pt-5"><p className="text-sm font-semibold uppercase tracking-[0.12em] text-primary">Phonétique</p><p className="mt-2 text-base leading-7 text-muted-foreground">{text.phonetic}</p></div>
-        <div className="mt-5 border-t border-border pt-5"><p className="text-sm font-semibold uppercase tracking-[0.12em] text-primary">Traduction</p><p className="mt-2 text-base leading-7 text-foreground">{text.translation}</p></div>
+        <div className="mt-6 border-t border-border pt-5"><p className="text-sm font-semibold uppercase tracking-[0.12em] text-primary">{t('learn.phonetics')}</p><p className="mt-2 text-base leading-7 text-muted-foreground">{text.phonetic}</p></div>
+        <div className="mt-5 border-t border-border pt-5"><p className="text-sm font-semibold uppercase tracking-[0.12em] text-primary">{t('learn.translation')}</p><p className="mt-2 text-base leading-7 text-foreground">{text.translation}</p></div>
       </article>
-      {index < READING_SHORT_TEXTS.length - 1 ? <button type="button" onClick={() => setIndex((current) => current + 1)} className="gold-gradient mt-5 flex w-full items-center justify-center gap-2 rounded-2xl py-4 font-semibold text-primary-foreground">Suivant<ChevronRight className="h-5 w-5"/></button> : <button type="button" onClick={onBack} className="gold-gradient mt-5 w-full rounded-2xl py-4 font-semibold text-primary-foreground">Terminer</button>}
+      {index < READING_SHORT_TEXTS.length - 1 ? <button type="button" onClick={() => setIndex((current) => current + 1)} className="gold-gradient mt-5 flex w-full items-center justify-center gap-2 rounded-2xl py-4 font-semibold text-primary-foreground">{t('ex.next')}<ChevronRight className="h-5 w-5"/></button> : <button type="button" onClick={onBack} className="gold-gradient mt-5 w-full rounded-2xl py-4 font-semibold text-primary-foreground">{t('learn.finish')}</button>}
     </div>
   </div>
 }
@@ -3117,10 +3122,10 @@ function ReadingView({ onBack }: { onBack: () => void }) {
 
         <section className="mt-6 rounded-3xl border border-border bg-card p-5 text-center">
           <p className="text-sm leading-relaxed text-muted-foreground">
-            {lang === 'en' ? 'Listen and repeat this word. It will then appear in your exercises for long-term memorization.' : lang === 'ar' ? 'استمع إلى هذه الكلمة وكرّرها. ستظهر بعد ذلك في تمارينك لتثبيتها.' : 'Écoutez et répétez ce mot. Il apparaîtra ensuite dans vos exercices pour bien le mémoriser.'}
+            {t('learn.readingHint')}
           </p>
           <button type="button" onClick={next} className="gold-gradient mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3 font-semibold text-primary-foreground">
-            {index + 1 === READING_WORDS.length ? (lang === 'en' ? 'Finish' : lang === 'ar' ? 'إنهاء' : 'Terminer') : (lang === 'en' ? 'I learned it · Next' : lang === 'ar' ? 'تعلّمتها · التالي' : 'J’ai appris · Mot suivant')}
+            {index + 1 === READING_WORDS.length ? t('learn.finish') : t('learn.learnedNext')}
             <ChevronRight className="h-4 w-4 rtl:rotate-180" />
           </button>
         </section>
@@ -3234,7 +3239,8 @@ export function isWritingAnswerCorrect(answer: WritingPiece[], target: WritingPi
   return answer.every((piece, index) => clusterBase(piece.base) === clusterBase(target[index].base))
 }
 
-function WordPronouncePractice({ word, lang }: { word: string; lang: Lang }) {
+function WordPronouncePractice({ word, lang: _lang }: { word: string; lang: Lang }) {
+  const { t } = useI18n()
   const [status, setStatus] = useState<'idle' | 'listening' | 'done' | 'error'>('idle')
   const [seconds, setSeconds] = useState(8)
   const start = () => {
@@ -3276,7 +3282,7 @@ function WordPronouncePractice({ word, lang }: { word: string; lang: Lang }) {
   }
   return <button type="button" onClick={start} disabled={status === 'listening'} className="classic-secondary-control flex h-12 items-center justify-center gap-2 rounded-full border border-border px-5 text-sm font-semibold">
     <Mic className="h-5 w-5" />
-    {status === 'listening' ? `${lang === 'en' ? 'Listening' : lang === 'ar' ? 'استماع' : 'Écoute'} · ${seconds} s` : status === 'done' ? (lang === 'en' ? 'Well pronounced' : lang === 'ar' ? 'نطق صحيح' : 'Bien prononcé') : status === 'error' ? (lang === 'en' ? 'Try again' : lang === 'ar' ? 'حاول مرة أخرى' : 'Réessayer') : (lang === 'en' ? 'Pronounce' : lang === 'ar' ? 'انطق' : 'Prononcer')}
+    {status === 'listening' ? `${t('learn.listeningShort')} · ${seconds} s` : status === 'done' ? t('learn.wellPronounced') : status === 'error' ? t('learn.tryAgain') : t('learn.pronounce')}
   </button>
 }
 
@@ -3338,10 +3344,10 @@ function WordPractice({ word, illustration, alternatives, onLearned, onMistake, 
   }
 
   const modes: { id: PracticeMode; label: string; icon: LucideIcon }[] = [
-    { id: 'listen', label: lang === 'en' ? 'Listen & pronounce' : lang === 'ar' ? 'استمع وانطق' : 'Écouter et prononcer', icon: Mic },
-    ...(selectedMode ? [] : [{ id: 'write' as const, label: lang === 'en' ? 'Writing' : lang === 'ar' ? 'الكتابة' : 'Écriture', icon: PenLine }]),
-    { id: 'memorize', label: lang === 'en' ? 'Memorize' : lang === 'ar' ? 'احفظ' : 'Mémoriser', icon: Brain },
-    { id: 'review', label: lang === 'en' ? 'Review' : lang === 'ar' ? 'مراجعة' : 'Révision', icon: RefreshCw },
+    { id: 'listen', label: t('learn.activity.listenPronounce'), icon: Mic },
+    ...(selectedMode ? [] : [{ id: 'write' as const, label: t('learn.activity.writing'), icon: PenLine }]),
+    { id: 'memorize', label: t('learn.activity.memorize'), icon: Brain },
+    { id: 'review', label: t('learn.activity.review'), icon: RefreshCw },
   ]
 
   if (!mode) return <div>
@@ -3353,12 +3359,12 @@ function WordPractice({ word, illustration, alternatives, onLearned, onMistake, 
       {modes.map(({ id, label, icon: Icon }) => <button key={id} type="button" onClick={() => setMode(id)} className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-4 text-start font-semibold active:scale-[0.99]"><Icon className="h-5 w-5 text-primary" />{label}<ChevronRight className="ms-auto h-4 w-4 rtl:rotate-180" /></button>)}
     </div>
     <button type="button" disabled={!memorized} onClick={onLearned} className="gold-gradient mt-5 flex w-full items-center justify-center gap-2 rounded-2xl py-3 font-semibold text-primary-foreground disabled:opacity-40">
-      {isLast ? (lang === 'en' ? 'Finish category' : lang === 'ar' ? 'إنهاء الفئة' : 'Terminer la catégorie') : (lang === 'en' ? 'Next word' : lang === 'ar' ? 'الكلمة التالية' : 'Mot suivant')}<ChevronRight className="h-4 w-4 rtl:rotate-180" />
+      {isLast ? t('learn.finishCategory') : t('learn.nextWord')}<ChevronRight className="h-4 w-4 rtl:rotate-180" />
     </button>
   </div>
 
   return <div>
-    <button type="button" onClick={() => selectedMode ? onBackToModes?.() : setMode(null)} className="mb-4 flex items-center gap-2 text-sm font-semibold text-primary"><ChevronLeft className="h-4 w-4 rtl:rotate-180" />{lang === 'en' ? 'Activities' : lang === 'ar' ? 'الأنشطة' : 'Retour aux activités'}</button>
+    <button type="button" onClick={() => selectedMode ? onBackToModes?.() : setMode(null)} className="mb-4 flex items-center gap-2 text-sm font-semibold text-primary"><ChevronLeft className="h-4 w-4 rtl:rotate-180" />{t('learn.activity.back')}</button>
 
     {mode === 'listen' && <article className="relief-panel mt-4 rounded-3xl border border-border p-6 text-center">
       <div className="mx-auto mb-4 flex h-28 w-28 items-center justify-center rounded-3xl border border-primary/20 bg-card text-7xl" role="img" aria-label={meaning}>{illustration}</div>
@@ -3368,33 +3374,33 @@ function WordPractice({ word, illustration, alternatives, onLearned, onMistake, 
 
     {mode === 'write' && <section className="mt-4 rounded-3xl border border-border bg-card p-5 text-center">
       <div className="text-7xl" role="img" aria-label={meaning}>{illustration}</div>
-      <p className="text-sm font-semibold">{lang === 'en' ? 'Rebuild the Arabic word' : lang === 'ar' ? 'أعِد بناء الكلمة' : 'Reconstituez le mot arabe'}</p>
+      <p className="text-sm font-semibold">{t('learn.rebuildWord')}</p>
       <div dir="rtl" className="mt-4 flex min-h-16 items-center justify-center rounded-2xl border border-dashed border-primary/40 bg-primary/5 p-3"><span className="font-arabic text-4xl leading-none">{assembled.map((piece) => piece.base).join('')}</span></div>
       <div dir="rtl" className="mt-4 flex flex-wrap justify-center gap-2">{writing.choices.map((piece) => <button type="button" key={piece.id} disabled={usedPieces.includes(piece.id) || puzzleCorrect} onClick={() => addPiece(piece)} className="flex h-12 min-w-12 items-center justify-center rounded-xl border border-border bg-background px-3 font-arabic text-3xl disabled:opacity-25">{piece.display}</button>)}</div>
-      <div className="mt-4 flex gap-2"><button type="button" onClick={() => { setAssembled([]); setUsedPieces([]); setPuzzleWrong(false) }} disabled={!assembled.length || puzzleCorrect} className="flex-1 rounded-2xl border border-border py-3 font-semibold disabled:opacity-40">{lang === 'en' ? 'Clear' : lang === 'ar' ? 'مسح' : 'Effacer'}</button><button type="button" onClick={validateWriting} disabled={assembled.length !== writing.correct.length || puzzleCorrect} className="gold-gradient flex-1 rounded-2xl py-3 font-semibold text-primary-foreground disabled:opacity-40">{lang === 'en' ? 'Check' : lang === 'ar' ? 'تحقق' : 'Valider'}</button></div>
-      {puzzleWrong && <div className="mt-3 rounded-2xl bg-destructive/10 p-3 text-destructive"><p className="flex items-center justify-center gap-2 text-sm font-semibold"><X className="h-4 w-4" />{lang === 'en' ? 'Incorrect answer.' : lang === 'ar' ? 'إجابة غير صحيحة.' : 'Mauvaise réponse.'}</p><p className="mt-2 text-xs">{lang === 'en' ? 'Correct spelling:' : lang === 'ar' ? 'الكتابة الصحيحة:' : 'Écriture correcte :'}</p><p dir="rtl" className="mt-1 font-arabic text-3xl text-foreground">{word.word}</p></div>}
-      {puzzleCorrect && <p className="mt-3 flex items-center justify-center gap-2 text-sm font-semibold text-emerald-600"><CheckCircle2 className="h-5 w-5" />{lang === 'en' ? 'Correct answer!' : lang === 'ar' ? 'إجابة صحيحة!' : 'Bonne réponse !'}</p>}
+      <div className="mt-4 flex gap-2"><button type="button" onClick={() => { setAssembled([]); setUsedPieces([]); setPuzzleWrong(false) }} disabled={!assembled.length || puzzleCorrect} className="flex-1 rounded-2xl border border-border py-3 font-semibold disabled:opacity-40">{t('learn.clear')}</button><button type="button" onClick={validateWriting} disabled={assembled.length !== writing.correct.length || puzzleCorrect} className="gold-gradient flex-1 rounded-2xl py-3 font-semibold text-primary-foreground disabled:opacity-40">{t('ex.check')}</button></div>
+      {puzzleWrong && <div className="mt-3 rounded-2xl bg-destructive/10 p-3 text-destructive"><p className="flex items-center justify-center gap-2 text-sm font-semibold"><X className="h-4 w-4" />{t('learn.incorrectAnswer')}</p><p className="mt-2 text-xs">{t('learn.correctSpelling')}</p><p dir="rtl" className="mt-1 font-arabic text-3xl text-foreground">{word.word}</p></div>}
+      {puzzleCorrect && <p className="mt-3 flex items-center justify-center gap-2 text-sm font-semibold text-emerald-600"><CheckCircle2 className="h-5 w-5" />{t('learn.correctAnswer')}</p>}
     </section>}
 
     {mode === 'memorize' && <section className="mt-4 rounded-3xl border border-border bg-card p-5 text-center">
-      <div className="text-7xl" role="img" aria-label={lang === 'fr' ? 'Indice visuel' : lang === 'ar' ? 'دليل بصري' : 'Visual clue'}>{illustration}</div><p className="mt-3 text-sm font-semibold">{lang === 'en' ? 'Choose the matching Arabic word' : lang === 'ar' ? 'اختر الكلمة العربية المناسبة' : 'Choisissez le mot arabe correspondant'}</p>
+      <div className="text-7xl" role="img" aria-label={t('learn.visualClue')}>{illustration}</div><p className="mt-3 text-sm font-semibold">{t('learn.chooseArabicWord')}</p>
       <div className="mt-4 grid gap-2">{memoryOptions.map((option) => { const chosen = selectedAnswer === option.word; return <button type="button" key={option.word} disabled={answerValidated} onClick={() => chooseAnswer(option)} className={`relative rounded-2xl border py-3 font-arabic text-2xl active:scale-[0.98] ${chosen ? answerValidated ? answerCorrect ? 'border-emerald-500 bg-emerald-500/10' : 'border-destructive bg-destructive/10' : 'border-primary bg-primary/10' : 'border-border bg-background'}`}>{option.word}</button>})}</div>
       {!answerValidated && <button type="button" disabled={!selectedAnswer} onClick={validateAnswer} className="gold-gradient mt-4 w-full rounded-2xl py-3 font-semibold text-primary-foreground disabled:opacity-40">{lang === 'fr' ? 'Valider' : lang === 'ar' ? 'تحقق' : 'Check'}</button>}
-      {answerValidated && <div className={`mt-3 rounded-2xl p-3 text-sm font-semibold ${answerCorrect ? 'bg-emerald-500/10 text-emerald-600' : 'bg-destructive/10 text-destructive'}`}>{answerCorrect ? (lang === 'en' ? 'Correct!' : lang === 'ar' ? 'صحيح!' : 'Bonne réponse !') : <>{lang === 'fr' ? 'Correction :' : lang === 'ar' ? 'التصحيح:' : 'Correction:'} <span dir="rtl" className="font-arabic text-xl text-foreground">{word.word}</span></>}</div>}
-      {answerValidated && <button type="button" onClick={onLearned} className="gold-gradient mt-4 w-full rounded-2xl py-3 font-semibold text-primary-foreground">{lang === 'fr' ? 'Suivant' : lang === 'ar' ? 'التالي' : 'Next'}</button>}
+      {answerValidated && <div className={`mt-3 rounded-2xl p-3 text-sm font-semibold ${answerCorrect ? 'bg-emerald-500/10 text-emerald-600' : 'bg-destructive/10 text-destructive'}`}>{answerCorrect ? t('ex.correct') : <>{t('learn.correction')} <span dir="rtl" className="font-arabic text-xl text-foreground">{word.word}</span></>}</div>}
+      {answerValidated && <button type="button" onClick={onLearned} className="gold-gradient mt-4 w-full rounded-2xl py-3 font-semibold text-primary-foreground">{t('ex.next')}</button>}
     </section>}
 
     {mode === 'review' && <section className="mt-4 rounded-3xl border border-border bg-card p-5 text-center">
       <p className="font-arabic text-5xl text-primary">{word.word}</p>
-      <p className="mt-3 text-sm font-semibold">{lang === 'en' ? 'What does this word mean?' : lang === 'ar' ? 'ما معنى هذه الكلمة؟' : 'Que signifie ce mot ?'}</p>
+      <p className="mt-3 text-sm font-semibold">{t('learn.wordMeaningQuestion')}</p>
       <div className="mt-4 grid gap-2">{reviewOptions.map((option) => { const chosen = selectedAnswer === option.word; return <button type="button" key={option.word} disabled={answerValidated} onClick={() => chooseAnswer(option)} className={`relative rounded-2xl border py-3 font-semibold active:scale-[0.98] ${chosen ? answerValidated ? answerCorrect ? 'border-emerald-500 bg-emerald-500/10' : 'border-destructive bg-destructive/10' : 'border-primary bg-primary/10' : 'border-border bg-background'}`}>{localized(option.meaning, lang)}</button>})}</div>
       {!answerValidated && <button type="button" disabled={!selectedAnswer} onClick={validateAnswer} className="gold-gradient mt-4 w-full rounded-2xl py-3 font-semibold text-primary-foreground disabled:opacity-40">{lang === 'fr' ? 'Valider' : lang === 'ar' ? 'تحقق' : 'Check'}</button>}
-      {answerValidated && <div className={`mt-3 rounded-2xl p-3 text-sm font-semibold ${answerCorrect ? 'bg-emerald-500/10 text-emerald-600' : 'bg-destructive/10 text-destructive'}`}>{answerCorrect ? (lang === 'en' ? 'Correct!' : lang === 'ar' ? 'صحيح!' : 'Bonne réponse !') : <>{lang === 'fr' ? 'Correction :' : lang === 'ar' ? 'التصحيح:' : 'Correction:'} <span className="text-foreground">{meaning}</span></>}</div>}
-      {answerValidated && <button type="button" onClick={onLearned} className="gold-gradient mt-4 w-full rounded-2xl py-3 font-semibold text-primary-foreground">{lang === 'fr' ? 'Suivant' : lang === 'ar' ? 'التالي' : 'Next'}</button>}
+      {answerValidated && <div className={`mt-3 rounded-2xl p-3 text-sm font-semibold ${answerCorrect ? 'bg-emerald-500/10 text-emerald-600' : 'bg-destructive/10 text-destructive'}`}>{answerCorrect ? t('ex.correct') : <>{t('learn.correction')} <span className="text-foreground">{meaning}</span></>}</div>}
+      {answerValidated && <button type="button" onClick={onLearned} className="gold-gradient mt-4 w-full rounded-2xl py-3 font-semibold text-primary-foreground">{t('ex.next')}</button>}
     </section>}
 
     {selectedMode && mode === 'listen' && <button type="button" onClick={onLearned} className="gold-gradient mt-5 flex w-full items-center justify-center gap-2 rounded-2xl py-3 font-semibold text-primary-foreground">
-      {isLast ? (lang === 'en' ? 'Finish activity' : lang === 'ar' ? 'إنهاء النشاط' : 'Terminer l’activité') : (lang === 'en' ? 'Next' : lang === 'ar' ? 'التالي' : 'Suivant')}<ChevronRight className="h-4 w-4 rtl:rotate-180" />
+      {isLast ? t('learn.finishActivity') : t('ex.next')}<ChevronRight className="h-4 w-4 rtl:rotate-180" />
     </button>}
 
   </div>
@@ -3423,9 +3429,9 @@ function VocabularyView({ onBack }: { onBack: () => void }) {
       <BackBar title={localized(category.label, lang)} onBack={() => { setResults(false); setPracticeMode(null); setMistakeIndexes([]) }} />
       <div className="flex flex-col items-center p-6 text-center">
         <ProgressRing value={percentage} size={112} stroke={9}><span className="text-xl font-bold">{percentage}%</span></ProgressRing>
-        <h2 className="gold-text mt-5 text-2xl font-bold">{lang === 'en' ? 'Activity completed' : lang === 'ar' ? 'اكتمل النشاط' : 'Activité terminée'}</h2>
-        <p className="mt-2 text-muted-foreground">{lang === 'en' ? 'Score' : lang === 'ar' ? 'النتيجة' : 'Score'} : <strong className="text-foreground">{correctCount}/{category.words.length}</strong></p>
-        {mistakeIndexes.length > 0 ? <button type="button" onClick={() => { setCorrectionQueue(mistakeIndexes); setWordIndex(mistakeIndexes[0]); setResults(false) }} className="gold-gradient mt-7 w-full rounded-2xl py-3.5 font-semibold text-primary-foreground">{lang === 'en' ? 'Correct my mistakes' : lang === 'ar' ? 'تصحيح أخطائي' : 'Corriger mes erreurs'}</button> : <button type="button" onClick={() => { setResults(false); setPracticeMode(null); setMistakeIndexes([]) }} className="gold-gradient mt-7 w-full rounded-2xl py-3.5 font-semibold text-primary-foreground">{lang === 'en' ? 'Finish' : lang === 'ar' ? 'إنهاء' : 'Terminer'}</button>}
+        <h2 className="gold-text mt-5 text-2xl font-bold">{t('learn.activityCompleted')}</h2>
+        <p className="mt-2 text-muted-foreground">{t('learn.score')} : <strong className="text-foreground">{correctCount}/{category.words.length}</strong></p>
+        {mistakeIndexes.length > 0 ? <button type="button" onClick={() => { setCorrectionQueue(mistakeIndexes); setWordIndex(mistakeIndexes[0]); setResults(false) }} className="gold-gradient mt-7 w-full rounded-2xl py-3.5 font-semibold text-primary-foreground">{t('learn.correctMistakes')}</button> : <button type="button" onClick={() => { setResults(false); setPracticeMode(null); setMistakeIndexes([]) }} className="gold-gradient mt-7 w-full rounded-2xl py-3.5 font-semibold text-primary-foreground">{t('learn.finish')}</button>}
       </div>
     </div>
   }
@@ -3463,9 +3469,9 @@ function VocabularyView({ onBack }: { onBack: () => void }) {
 
   if (category) {
     const modes: { id: PracticeMode; label: string; description: string; icon: LucideIcon }[] = [
-      { id: 'listen', label: lang === 'en' ? 'Listen & pronounce' : lang === 'ar' ? 'استمع وانطق' : 'Écouter et prononcer', description: lang === 'fr' ? 'Écoutez puis répétez chaque mot.' : lang === 'ar' ? 'استمع ثم كرر كل كلمة.' : 'Listen, then repeat every word.', icon: Mic },
-      { id: 'memorize', label: lang === 'en' ? 'Memorization' : lang === 'ar' ? 'الحفظ' : 'Mémorisation', description: lang === 'fr' ? 'Associez chaque image au bon mot arabe.' : lang === 'ar' ? 'اربط كل صورة بالكلمة العربية الصحيحة.' : 'Match every picture with its Arabic word.', icon: Brain },
-      { id: 'review', label: lang === 'en' ? 'Review' : lang === 'ar' ? 'المراجعة' : 'Révision', description: lang === 'fr' ? 'Vérifiez le sens des mots déjà étudiés.' : lang === 'ar' ? 'راجع معاني الكلمات التي درستها.' : 'Review the meaning of learned words.', icon: RefreshCw },
+      { id: 'listen', label: t('learn.activity.listenPronounce'), description: t('learn.activity.listenDescription'), icon: Mic },
+      { id: 'memorize', label: t('learn.activity.memorizeLabel'), description: t('learn.activity.memorizeDescription'), icon: Brain },
+      { id: 'review', label: t('learn.activity.review'), description: t('learn.activity.reviewDescription'), icon: RefreshCw },
     ]
     return <div>
     <BackBar title={localized(category.label, lang)} onBack={() => setCategoryId(null)} />
@@ -3490,7 +3496,7 @@ function VocabularyView({ onBack }: { onBack: () => void }) {
             return <button key={item.id} type="button" onClick={() => { setCategoryId(item.id); setWordIndex(null) }} className="flex min-h-32 flex-col items-center justify-center rounded-3xl border border-border bg-card p-4 text-center transition active:scale-95">
               <span className="text-4xl" aria-hidden>{categoryEmoji[item.id] ?? '📚'}</span>
               <span className="gold-text mt-3 text-sm font-bold">{localized(item.label, lang)}</span>
-              <span className="mt-1 text-[11px] text-muted-foreground">{item.words.length} {lang === 'en' ? 'items' : lang === 'ar' ? 'عناصر' : 'éléments'}</span>
+              <span className="mt-1 text-[11px] text-muted-foreground">{item.words.length} {t('learn.items')}</span>
             </button>
           })}
         </div>

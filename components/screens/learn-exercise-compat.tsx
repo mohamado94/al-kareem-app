@@ -28,6 +28,7 @@ import { ListenButton, ListenCircle, PronounceButton } from '@/components/audio-
 import { speakArabic, speakPhrase, playRecordedAudio, playRecordedAudioSequence, stopSpeech, type RecordedAudioSegment } from '@/lib/speech'
 import { letterPositionPhrase, type LetterPosition } from '@/lib/letter-position-speech'
 import { isNativeSpeechPlatform, listenArabicNative } from '@/lib/native-speech'
+import { speechErrorText } from '@/lib/ui-copy'
 import { letterSpokenName, letterDisplayName } from '@/lib/letter-spoken-names'
 import { letterRecordedAudio } from '@/lib/letter-recorded-audio'
 import { letterPositionRecordedSequence } from '@/lib/letter-position-recorded-audio'
@@ -2296,10 +2297,10 @@ function WordPronouncePractice({ word, lang }: { word: string; lang: Lang }) {
         window.clearInterval(nativeCountdown)
         if (!result.ok) {
           showUnavailable(result.reason === 'permission-denied'
-            ? 'Autorisation du microphone ou de la reconnaissance refusée'
+            ? speechErrorText(lang, 'permission')
             : result.reason === 'unavailable'
-              ? 'Reconnaissance vocale non prise en charge par ce navigateur'
-              : 'Impossible de démarrer la reconnaissance vocale')
+              ? speechErrorText(lang, 'unsupported')
+              : speechErrorText(lang, 'start'))
           return
         }
         setStatus(wordPronunciationMatches(result.heard, word) ? 'done' : 'error')
@@ -2308,7 +2309,7 @@ function WordPronouncePractice({ word, lang }: { word: string; lang: Lang }) {
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-    if (!SR) { showUnavailable('Reconnaissance vocale non prise en charge par ce navigateur'); return }
+    if (!SR) { showUnavailable(speechErrorText(lang, 'unsupported')); return }
     const rec = new SR()
     let heard = ''
     let technicalFailure = false
@@ -2321,17 +2322,17 @@ function WordPronouncePractice({ word, lang }: { word: string; lang: Lang }) {
     rec.onerror = (event: { error?: string }) => {
       if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
         technicalFailure = true
-        showUnavailable('Autorisation du microphone ou de la reconnaissance refusée')
+        showUnavailable(speechErrorText(lang, 'permission'))
       } else if (event.error === 'audio-capture') {
         technicalFailure = true
-        showUnavailable('Microphone inaccessible ou déjà utilisé')
+        showUnavailable(speechErrorText(lang, 'microphone'))
       } else if (event.error === 'network') {
         technicalFailure = true
-        showUnavailable('Connexion au service de reconnaissance vocale impossible')
+        showUnavailable(speechErrorText(lang, 'network'))
       }
     }
     try { rec.start() } catch {
-      showUnavailable('Impossible de démarrer la reconnaissance vocale')
+      showUnavailable(speechErrorText(lang, 'start'))
       return
     }
     const countdown = window.setInterval(() => setSeconds((value) => Math.max(0, value - 1)), 1000)

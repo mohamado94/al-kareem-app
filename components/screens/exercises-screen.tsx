@@ -141,7 +141,7 @@ function QuizRunner({ type, onExit }: { type: ExType; onExit: () => void }) {
 
   const actualQuestionIndex = questionOrder[index] ?? 0
   const q = questions[actualQuestionIndex]
-  if (!q) return <div className="flex h-full flex-col"><QuizTopBar onExit={onExit} progress={0} /><div className="flex flex-1 flex-col items-center justify-center px-8 text-center"><h2 className="gold-text text-2xl font-bold">{lang === 'fr' ? 'Commencez par apprendre' : lang === 'ar' ? 'ابدأ بالتعلّم أولاً' : 'Start by learning'}</h2><p className="mt-3 text-sm leading-6 text-muted-foreground">{lang === 'fr' ? 'Validez d’abord des éléments du parcours. Les exercices du jour utiliseront uniquement ce que vous avez réellement appris.' : lang === 'ar' ? 'تحقق أولاً من عناصر المسار. ستستخدم التمارين اليومية فقط ما تعلمته بالفعل.' : 'Validate learning items first. Daily exercises will only use material you have actually learned.'}</p><button type="button" onClick={onExit} className="gold-gradient mt-7 w-full rounded-2xl py-3.5 font-semibold text-primary-foreground">{t('common.back')}</button></div></div>
+  if (!q) return <div className="flex h-full flex-col"><QuizTopBar onExit={onExit} progress={0} /><div className="flex flex-1 flex-col items-center justify-center px-8 text-center"><h2 className="gold-text text-2xl font-bold">{t('ex.startLearningFirst')}</h2><p className="mt-3 text-sm leading-6 text-muted-foreground">{t('ex.startLearningFirstSub')}</p><button type="button" onClick={onExit} className="gold-gradient mt-7 w-full rounded-2xl py-3.5 font-semibold text-primary-foreground">{t('common.back')}</button></div></div>
   const isListen = Boolean(q.audioText)
   const isCorrect = selected === q.answerIndex
 
@@ -248,7 +248,7 @@ function QuizRunner({ type, onExit }: { type: ExType; onExit: () => void }) {
               className="gold-gradient flex items-center justify-center gap-2 rounded-2xl py-3.5 font-semibold text-primary-foreground active:scale-[0.98]"
             >
               <RotateCcw className="h-5 w-5" />
-              {lang === 'en' ? 'Correct my mistakes' : lang === 'ar' ? 'تصحيح أخطائي' : 'Corriger mes erreurs'}
+              {t('ex.correctMistakes')}
             </button>}
             <button
               type="button"
@@ -277,7 +277,7 @@ function QuizRunner({ type, onExit }: { type: ExType; onExit: () => void }) {
 
       <div className="flex-1 px-5 pt-4">
         <p className="text-xs font-medium text-muted-foreground">
-          {correctionMode ? (lang === 'en' ? 'Correction' : lang === 'ar' ? 'تصحيح' : 'Correction') : t('ex.question')} {index + 1} {t('ex.of')} {questionOrder.length}
+          {correctionMode ? t('ex.correction') : t('ex.question')} {index + 1} {t('ex.of')} {questionOrder.length}
         </p>
         <h2 className="mt-1 text-xl font-bold text-balance text-foreground">
           {isListen ? t('ex.listenPrompt') : t('ex.chooseAnswer')}
@@ -343,13 +343,13 @@ function QuizRunner({ type, onExit }: { type: ExType; onExit: () => void }) {
       {/* The answer is revealed only after explicit validation. */}
       <div className="p-5">
         {!checked && <button type="button" disabled={selected === null} onClick={onValidate} className="gold-gradient w-full rounded-2xl py-3.5 font-semibold text-primary-foreground disabled:opacity-40">
-          {lang === 'en' ? 'Check' : lang === 'ar' ? 'تحقق' : 'Valider'}
+          {t('ex.check')}
         </button>}
         {checked && (
           <><div className={cn('mb-3 flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold', isCorrect ? 'bg-[oklch(0.72_0.13_155/0.15)] text-[var(--success)]' : 'bg-destructive/15 text-destructive')}>
               {isCorrect ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
-              {isCorrect ? t('ex.correct') : <span>{t('ex.wrong')} · {lang === 'fr' ? 'Réponse :' : lang === 'ar' ? 'الإجابة:' : 'Answer:'} <strong>{q.options[q.answerIndex]?.text}</strong></span>}
-            </div><button type="button" onClick={onNext} className="gold-gradient w-full rounded-2xl py-3.5 font-semibold text-primary-foreground">{lang === 'en' ? 'Next' : lang === 'ar' ? 'التالي' : 'Suivant'}</button></>
+              {isCorrect ? t('ex.correct') : <span>{t('ex.wrong')} · {t('ex.answer')} <strong>{q.options[q.answerIndex]?.text}</strong></span>}
+            </div><button type="button" onClick={onNext} className="gold-gradient w-full rounded-2xl py-3.5 font-semibold text-primary-foreground">{t('ex.next')}</button></>
         )}
       </div>
     </div>
