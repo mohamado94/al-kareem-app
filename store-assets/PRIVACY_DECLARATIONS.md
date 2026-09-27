@@ -10,6 +10,7 @@ Ce document prépare les réponses. La validation finale doit être faite par le
 | Informations personnelles | Nom d’affichage facultatif | Personnalisation du profil | Oui | Non |
 | Activité dans l’application | Progression, exercices, dernière activité | Fonctionnement et synchronisation | Oui si connecté | Non |
 | Identifiants techniques | Abonnement push et jetons de session | Connexion, sécurité, notifications demandées | Oui | Non |
+| Mesure d’audience | Pages vues agrégées via Vercel Web Analytics (sans cookie, sans suivi inter-sites) | Statistiques de fréquentation | Non | Non |
 | Diagnostics techniques | Journaux minimaux d’erreur et de sécurité des hébergeurs | Sécurité et fiabilité | Potentiellement | Non |
 
 ## Déclarations générales
@@ -22,6 +23,8 @@ Ce document prépare les réponses. La validation finale doit être faite par le
 - Suppression disponible dans l’application et sur le web.
 - Compte facultatif : le mode invité reste utilisable.
 - Microphone utilisé uniquement pendant un exercice de prononciation déclenché par l’utilisateur.
+- Reconnaissance vocale effectuée par le service du navigateur ou du système (Apple / Google) ; l’audio n’est ni reçu ni stocké par Al-Kareem : ne pas déclarer « Audio Data » comme collectée par l’app.
+- Android : l’application déclare `RECORD_AUDIO` et la visibilité du service `android.speech.RecognitionService` (aucun autre accès).
 
 ## Google Play — Data safety
 
@@ -37,4 +40,5 @@ Ce document prépare les réponses. La validation finale doit être faite par le
 - Usage Data → Product Interaction : App Functionality, linked when signed in.
 - Identifiers → User ID : App Functionality / Account Management, linked to user.
 - Diagnostics : sélectionner uniquement si la configuration Vercel effectivement utilisée transmet des diagnostics identifiables.
+- Usage Data → Product Interaction couvre aussi la mesure d’audience agrégée Vercel Web Analytics (non liée, sans suivi).
 - Tracking : Non.

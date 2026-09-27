@@ -37,7 +37,8 @@ self.addEventListener('fetch', (event) => {
 
   event.respondWith(
     fetch(request).then((response) => {
-      if (response.ok) {
+      // Only full 200 responses can be cached (audio range requests return 206).
+      if (response.status === 200) {
         const copy = response.clone()
         event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.put(request, copy)))
       }

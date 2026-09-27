@@ -22,11 +22,14 @@ import {
 } from 'lucide-react'
 import { useI18n, type Lang } from '@/lib/i18n'
 import { localized } from '@/lib/i18n-content'
+import { seededShuffle } from '@/lib/exercise-shuffle'
 import { useProgress } from '@/lib/progress/context'
 import { ScreenHeader, ProgressBar, ProgressRing, accentClass } from '@/components/ui-bits'
 import { ListenButton, ListenCircle, PronounceButton } from '@/components/audio-button'
 import { speakArabic, speakPhrase, playRecordedAudio, playRecordedAudioSequence, stopSpeech, type RecordedAudioSegment } from '@/lib/speech'
 import { letterPositionPhrase, type LetterPosition } from '@/lib/letter-position-speech'
+import { isNativeSpeechPlatform, listenArabicNative } from '@/lib/native-speech'
+import { speechErrorText } from '@/lib/ui-copy'
 import { letterSpokenName, letterDisplayName } from '@/lib/letter-spoken-names'
 import { letterRecordedAudio } from '@/lib/letter-recorded-audio'
 import { letterPositionRecordedSequence } from '@/lib/letter-position-recorded-audio'
@@ -2226,19 +2229,22 @@ function exerciseHash(value: string, seed = 0) {
 }
 
 export function variedWordOptions(correct: Word, alternatives: Word[], seed: number, meaningKey?: Lang) {
-  const seen = new Set<string>()
+  const keyOf = (item: Word) => meaningKey ? localized(item.meaning, meaningKey) : item.word
+  // The correct answer's own label is reserved: a distractor displaying the
+  // same text would create a second valid answer.
+  const seen = new Set<string>([keyOf(correct)])
   const candidates = alternatives.filter((item) => {
     if (item.word === correct.word) return false
-    const key = meaningKey ? localized(item.meaning, meaningKey) : item.word
+    const key = keyOf(item)
     if (seen.has(key)) return false
     seen.add(key)
     return true
   })
-  const distractors = candidates
-    .sort((a, b) => exerciseHash(a.word, seed) - exerciseHash(b.word, seed))
-    .slice(0, 3)
-  return [correct, ...distractors]
-    .sort((a, b) => exerciseHash(a.word, seed + 7919) - exerciseHash(b.word, seed + 7919))
+  // The question identity is part of the shuffle key: each question gets its
+  // own distractors and a complete, independent repositioning of all choices.
+  const questionKey = `${seed}|${correct.word}|${meaningKey ?? ''}`
+  const distractors = seededShuffle(candidates, `${questionKey}|distractors`).slice(0, 3)
+  return seededShuffle([correct, ...distractors], `${questionKey}|order`)
 }
 
 function writingPiecesFor(word: string, variationSeed = 0) {
@@ -2288,9 +2294,26 @@ function WordPronouncePractice({ word, lang }: { word: string; lang: Lang }) {
     window.setTimeout(() => setStatus('idle'), 6000)
   }
   const start = () => {
+    if (isNativeSpeechPlatform()) {
+      setStatus('listening'); setSeconds(8)
+      const nativeCountdown = window.setInterval(() => setSeconds((value) => Math.max(0, value - 1)), 1000)
+      void listenArabicNative(8000, [word]).then((result) => {
+        window.clearInterval(nativeCountdown)
+        if (!result.ok) {
+          showUnavailable(result.reason === 'permission-denied'
+            ? speechErrorText(lang, 'permission')
+            : result.reason === 'unavailable'
+              ? speechErrorText(lang, 'unsupported')
+              : speechErrorText(lang, 'start'))
+          return
+        }
+        setStatus(wordPronunciationMatches(result.heard, word) ? 'done' : 'error')
+      })
+      return
+    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-    if (!SR) { showUnavailable('Reconnaissance vocale non prise en charge par ce navigateur'); return }
+    if (!SR) { showUnavailable(speechErrorText(lang, 'unsupported')); return }
     const rec = new SR()
     let heard = ''
     let technicalFailure = false
@@ -2303,17 +2326,17 @@ function WordPronouncePractice({ word, lang }: { word: string; lang: Lang }) {
     rec.onerror = (event: { error?: string }) => {
       if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
         technicalFailure = true
-        showUnavailable('Autorisation du microphone ou de la reconnaissance refusée')
+        showUnavailable(speechErrorText(lang, 'permission'))
       } else if (event.error === 'audio-capture') {
         technicalFailure = true
-        showUnavailable('Microphone inaccessible ou déjà utilisé')
+        showUnavailable(speechErrorText(lang, 'microphone'))
       } else if (event.error === 'network') {
         technicalFailure = true
-        showUnavailable('Connexion au service de reconnaissance vocale impossible')
+        showUnavailable(speechErrorText(lang, 'network'))
       }
     }
     try { rec.start() } catch {
-      showUnavailable('Impossible de démarrer la reconnaissance vocale')
+      showUnavailable(speechErrorText(lang, 'start'))
       return
     }
     const countdown = window.setInterval(() => setSeconds((value) => Math.max(0, value - 1)), 1000)
@@ -2773,21 +2796,17 @@ function GuidedLanguageLesson({ persistenceKey, title, lessonNote, words, allWor
       {exercise.kind === 'build' && (() => {
         const correctTokens = exercise.word.word.trim().split(/\s+/)
         const distractorCount = Math.max(3, 5 - correctTokens.length)
-        const distractorTokens = Array.from(new Set(
+        const distractorPool = Array.from(new Set(
           allWords
             .filter((word) => word.word !== exercise.word.word)
             .flatMap((word) => word.word.trim().split(/\s+/))
             .filter((token) => !correctTokens.includes(token)),
         ))
-          .sort((a, b) => {
-            const tokenScore = (token: string) => Array.from(token).reduce((sum, character) => sum * 31 + character.charCodeAt(0), choiceSeed + activeExerciseIndex * 97 + reviewRound * 1009)
-            return tokenScore(a) - tokenScore(b)
-          })
+        // Seeded Fisher–Yates (the previous numeric score overflowed to
+        // seed-independent values for long tokens).
+        const distractorTokens = seededShuffle(distractorPool, `${choiceSeed}|${activeExerciseIndex}|${reviewRound}|build-distractors`)
           .slice(0, distractorCount)
-        const available = [...correctTokens, ...distractorTokens].sort((a, b) => {
-          const tokenScore = (token: string) => Array.from(token).reduce((sum, character) => sum * 37 + character.charCodeAt(0), choiceSeed + activeExerciseIndex * 53 + reviewRound * 1013)
-          return tokenScore(a) - tokenScore(b)
-        })
+        const available = seededShuffle([...correctTokens, ...distractorTokens], `${choiceSeed}|${activeExerciseIndex}|${reviewRound}|build-order`)
         const complete = builtTokens.length === correctTokens.length
         const correct = complete && builtTokens.every((token, index) => token === correctTokens[index])
         return <section className="rounded-3xl border border-border bg-card p-5 text-center">
