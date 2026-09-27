@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isRecord, readJson, rejectCrossOrigin, validEmail } from '../lib/api-security'
+import { clientIp, isRecord, readJson, rejectCrossOrigin, validEmail } from '../lib/api-security'
 
 describe('API security helpers', () => {
   it('accepts the configured application origin and rejects another origin', () => {
@@ -15,6 +15,13 @@ describe('API security helpers', () => {
     expect(validEmail('not-an-email')).toBe(false)
     expect(isRecord({ ok: true })).toBe(true)
     expect(isRecord([])).toBe(false)
+  })
+
+  it('prefers the platform-set client IP over a spoofable x-forwarded-for', () => {
+    const headers = { 'x-forwarded-for': '6.6.6.6', 'x-vercel-forwarded-for': '1.2.3.4', 'x-real-ip': '1.2.3.4' }
+    expect(clientIp(new Request('https://app.alkareem.test/', { headers }))).toBe('1.2.3.4')
+    expect(clientIp(new Request('https://app.alkareem.test/', { headers: { 'x-real-ip': '5.5.5.5, 7.7.7.7' } }))).toBe('5.5.5.5')
+    expect(clientIp(new Request('https://app.alkareem.test/'))).toBe('unknown')
   })
 
   it('rejects a JSON body above its byte limit', async () => {

@@ -27,6 +27,7 @@ import { useProgress } from '@/lib/progress/context'
 import { ScreenHeader, ProgressBar, ProgressRing, accentClass } from '@/components/ui-bits'
 import { ListenButton, ListenCircle, PronounceButton } from '@/components/audio-button'
 import { speakArabic, speakPhrase, playRecordedAudio, playRecordedAudioSequence, type RecordedAudioSegment } from '@/lib/speech'
+import { isNativeSpeechPlatform, listenArabicNative } from '@/lib/native-speech'
 import { letterPositionPhrase, type LetterPosition } from '@/lib/letter-position-speech'
 import { letterSpokenName, letterDisplayName } from '@/lib/letter-spoken-names'
 import { letterRecordedAudio } from '@/lib/letter-recorded-audio'
@@ -3237,6 +3238,18 @@ function WordPronouncePractice({ word, lang }: { word: string; lang: Lang }) {
   const [status, setStatus] = useState<'idle' | 'listening' | 'done' | 'error'>('idle')
   const [seconds, setSeconds] = useState(8)
   const start = () => {
+    if (isNativeSpeechPlatform()) {
+      setStatus('listening'); setSeconds(8)
+      const nativeCountdown = window.setInterval(() => setSeconds((value) => Math.max(0, value - 1)), 1000)
+      void listenArabicNative(8000, [word]).then((result) => {
+        window.clearInterval(nativeCountdown)
+        if (!result.ok) { setStatus('error'); return }
+        const expected = stripArabicMarks(word).replace(/\s/g, '')
+        const actual = stripArabicMarks(result.heard).replace(/\s/g, '')
+        setStatus(actual.includes(expected) ? 'done' : 'error')
+      })
+      return
+    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     if (!SR) { setStatus('error'); return }
