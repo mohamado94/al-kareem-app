@@ -27,6 +27,7 @@ import { ScreenHeader, ProgressBar, ProgressRing, accentClass } from '@/componen
 import { ListenButton, ListenCircle, PronounceButton } from '@/components/audio-button'
 import { speakArabic, speakPhrase, playRecordedAudio, playRecordedAudioSequence, stopSpeech, type RecordedAudioSegment } from '@/lib/speech'
 import { letterPositionPhrase, type LetterPosition } from '@/lib/letter-position-speech'
+import { isNativeSpeechPlatform, listenArabicNative } from '@/lib/native-speech'
 import { letterSpokenName, letterDisplayName } from '@/lib/letter-spoken-names'
 import { letterRecordedAudio } from '@/lib/letter-recorded-audio'
 import { letterPositionRecordedSequence } from '@/lib/letter-position-recorded-audio'
@@ -2288,6 +2289,23 @@ function WordPronouncePractice({ word, lang }: { word: string; lang: Lang }) {
     window.setTimeout(() => setStatus('idle'), 6000)
   }
   const start = () => {
+    if (isNativeSpeechPlatform()) {
+      setStatus('listening'); setSeconds(8)
+      const nativeCountdown = window.setInterval(() => setSeconds((value) => Math.max(0, value - 1)), 1000)
+      void listenArabicNative(8000, [word]).then((result) => {
+        window.clearInterval(nativeCountdown)
+        if (!result.ok) {
+          showUnavailable(result.reason === 'permission-denied'
+            ? 'Autorisation du microphone ou de la reconnaissance refusée'
+            : result.reason === 'unavailable'
+              ? 'Reconnaissance vocale non prise en charge par ce navigateur'
+              : 'Impossible de démarrer la reconnaissance vocale')
+          return
+        }
+        setStatus(wordPronunciationMatches(result.heard, word) ? 'done' : 'error')
+      })
+      return
+    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     if (!SR) { showUnavailable('Reconnaissance vocale non prise en charge par ce navigateur'); return }

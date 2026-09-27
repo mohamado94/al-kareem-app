@@ -5,9 +5,16 @@ import { getDb, isDatabaseConfigured } from '@/lib/db'
 type Bucket = { count: number; resetAt: number }
 const buckets = new Map<string, Bucket>()
 
+/**
+ * Client IP for rate limiting. On Vercel, `x-vercel-forwarded-for` and
+ * `x-real-ip` are set by the platform edge and cannot be spoofed by the client;
+ * `x-forwarded-for` is only a last-resort fallback outside Vercel.
+ */
 export function clientIp(request: Request): string {
-  return request.headers.get('x-real-ip')
-    ?? request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+  const first = (value: string | null) => value?.split(',')[0]?.trim() || null
+  return first(request.headers.get('x-vercel-forwarded-for'))
+    ?? first(request.headers.get('x-real-ip'))
+    ?? first(request.headers.get('x-forwarded-for'))
     ?? 'unknown'
 }
 
@@ -27,6 +34,10 @@ export async function rateLimit(request: Request, scope: string, limit: number, 
         reset_at = CASE WHEN api_rate_limits.reset_at <= now() THEN ${resetAt} ELSE api_rate_limits.reset_at END
       RETURNING request_count, reset_at
     `
+    // Opportunistic cleanup so the persistent bucket table does not grow forever.
+    if (Math.random() < 0.01) {
+      await sql`DELETE FROM api_rate_limits WHERE reset_at < now() - interval '1 day'`.catch(() => undefined)
+    }
     if (rows[0].request_count <= limit) return null
     const retry = Math.max(1, Math.ceil((new Date(rows[0].reset_at).getTime() - now) / 1000))
     return NextResponse.json({ error: 'rateLimited' }, { status: 429, headers: { 'Retry-After': String(retry) } })

@@ -1,13 +1,15 @@
 import { NextResponse } from 'next/server'
 import { getDb, isDatabaseConfigured } from '@/lib/db'
 import { getUserFromRequest } from '@/lib/auth/session'
-import { isRecord, readJson, rejectCrossOrigin } from '@/lib/api-security'
+import { isRecord, rateLimit, readJson, rejectCrossOrigin } from '@/lib/api-security'
 
 const LANGUAGES = new Set(['fr', 'ar', 'en', 'id', 'ms'])
 
 export async function PATCH(request: Request) {
   const crossOrigin = rejectCrossOrigin(request)
   if (crossOrigin) return crossOrigin
+  const limited = await rateLimit(request, 'preferences', 60, 60_000)
+  if (limited) return limited
   if (!isDatabaseConfigured()) return NextResponse.json({ error: 'Not configured' }, { status: 503 })
   const user = await getUserFromRequest(request)
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
