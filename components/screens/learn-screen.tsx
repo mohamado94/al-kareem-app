@@ -280,18 +280,14 @@ function BackBar({ title, onBack }: { title: string; onBack: () => void }) {
 function EmptyLessonView({ number, onOpen, onBack }: { number: 2 | 3 | 4; onOpen: (v: View) => void; onBack: () => void }) {
   const { lang } = useI18n()
   const titles = {
-    2: lang === 'ar' ? 'القراءة' : lang === 'en' ? 'Reading' : 'Lecture',
-    3: lang === 'ar' ? 'المفردات الأساسية' : lang === 'en' ? 'Essential vocabulary' : 'Vocabulaire essentiel',
-    4: lang === 'ar' ? 'القواعد وتصريف الأفعال' : lang === 'en' ? 'Grammar and conjugation' : 'Grammaire et conjugaison',
+    2: learningText('Lecture', lang),
+    3: learningText('Vocabulaire essentiel', lang),
+    4: learningText('Grammaire et conjugaison', lang),
   }
   if (number === 2) {
-    const chapters = lang === 'ar'
-      ? ['قراءة الكلمات', 'قراءة الجمل', 'قراءة النصوص القصيرة']
-      : lang === 'en'
-        ? ['Reading words', 'Reading sentences', 'Reading short texts']
-        : ['Lire des mots', 'Lire des phrases', 'Lire des textes courts']
+    const chapters = ['Lire des mots', 'Lire des phrases', 'Lire des textes courts'].map((chapter) => learningText(chapter, lang))
     return <div>
-      <BackBar title={`${lang === 'ar' ? 'الدرس' : lang === 'en' ? 'Lesson' : 'Leçon'} 2 · ${titles[2]}`} onBack={onBack} />
+      <BackBar title={`${learningText('Leçon', lang)} 2 · ${titles[2]}`} onBack={onBack} />
       <div className="space-y-3 px-5 pb-8 pt-5">
         {chapters.map((chapter, index) => <button type="button" key={chapter} onClick={() => index === 0 ? onOpen({ kind: 'lesson-two-words' }) : index === 1 ? onOpen({ kind: 'lesson-two-sentences' }) : onOpen({ kind: 'lesson-two-texts' })} className="flex w-full items-center gap-4 rounded-3xl border border-border bg-card p-5 text-start active:scale-[0.99]">
           <span className="gold-gradient flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-lg font-bold text-primary-foreground">{index + 1}</span>
@@ -303,7 +299,7 @@ function EmptyLessonView({ number, onOpen, onBack }: { number: 2 | 3 | 4; onOpen
   }
   if (number === 3) {
     return <div>
-      <BackBar title={`${lang === 'ar' ? 'الدرس' : lang === 'en' ? 'Lesson' : 'Leçon'} 3 · ${titles[3]}`} onBack={onBack} />
+      <BackBar title={`${learningText('Leçon', lang)} 3 · ${titles[3]}`} onBack={onBack} />
       <div className="space-y-3 px-5 pb-8 pt-5">
         <button type="button" onClick={() => onOpen({ kind: 'lesson-three-courtesy' })} className="flex w-full items-center gap-4 rounded-3xl border border-border bg-card p-5 text-start active:scale-[0.99]">
           <span className="gold-gradient flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-lg font-bold text-primary-foreground">1</span>
@@ -330,7 +326,7 @@ function EmptyLessonView({ number, onOpen, onBack }: { number: 2 | 3 | 4; onOpen
   }
   if (number === 4) {
     return <div>
-      <BackBar title={`${lang === 'ar' ? 'الدرس' : lang === 'en' ? 'Lesson' : 'Leçon'} 4 · ${titles[4]}`} onBack={onBack} />
+      <BackBar title={`${learningText('Leçon', lang)} 4 · ${titles[4]}`} onBack={onBack} />
       <div className="space-y-3 px-5 pb-8 pt-5">
         <button type="button" onClick={() => onOpen({ kind: 'lesson-four-essential-verbs' })} className="flex w-full items-center gap-4 rounded-3xl border border-border bg-card p-5 text-start active:scale-[0.99]">
           <span className="gold-gradient flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-lg font-bold text-primary-foreground">1</span>
@@ -340,7 +336,7 @@ function EmptyLessonView({ number, onOpen, onBack }: { number: 2 | 3 | 4; onOpen
       </div>
     </div>
   }
-  return <div><BackBar title={`${lang === 'ar' ? 'الدرس' : lang === 'en' ? 'Lesson' : 'Leçon'} ${number} · ${titles[number]}`} onBack={onBack} /></div>
+  return <div><BackBar title={`${learningText('Leçon', lang)} ${number} · ${titles[number]}`} onBack={onBack} /></div>
 }
 
 const ESSENTIAL_VERB_SECTIONS = [
@@ -773,13 +769,13 @@ function NumbersModule({ onBack }: { onBack: () => void }) {
           <h3 className="gold-text mb-4 text-lg font-bold">Sept exemples pour s’entraîner</h3>
           <div className="overflow-x-auto rounded-2xl border border-border">
             <table className="w-full table-fixed border-collapse text-start [overflow-wrap:anywhere]">
-              <thead className="bg-secondary/70"><tr><th className="px-4 py-3 text-start text-sm font-bold text-primary">Nombre</th><th className="px-4 py-3 text-start text-sm font-bold text-primary">Français</th><th className="px-4 py-3 text-start text-sm font-bold text-primary">Construction en arabe</th><th className="px-4 py-3 text-start text-sm font-bold text-primary">Arabe vocalisé</th><th className="px-4 py-3 text-start text-sm font-bold text-primary">Phonétique</th></tr></thead>
+              <thead className="bg-secondary/70"><tr><th className="px-4 py-3 text-start text-sm font-bold text-primary">{learningText('Nombre', lang)}</th><th className="px-4 py-3 text-start text-sm font-bold text-primary">{learningText('Français', lang)}</th><th className="px-4 py-3 text-start text-sm font-bold text-primary">{learningText('Construction en arabe', lang)}</th><th className="px-4 py-3 text-start text-sm font-bold text-primary">{learningText('Arabe vocalisé', lang)}</th><th className="px-4 py-3 text-start text-sm font-bold text-primary">{learningText('Phonétique', lang)}</th></tr></thead>
               <tbody>{NUMBER_PRACTICE.map(([number, french, construction, arabic, phonetic], index) => <tr key={number} className={index % 2 ? 'bg-secondary/20' : 'bg-card'}><td className="border-t border-border px-4 py-3 text-sm font-bold">{number}</td><td className="border-t border-border px-4 py-3 text-sm">{french}</td><td className="border-t border-border px-4 py-3 text-sm">{construction}</td><td dir="rtl" className="font-arabic border-t border-border px-4 py-3 text-right text-xl font-bold">{arabic}</td><td className="border-t border-border px-4 py-3 text-sm text-muted-foreground">{phonetic}</td></tr>)}</tbody>
             </table>
           </div>
         </section>
         <section className="rounded-3xl border border-border bg-card p-5 shadow-sm">
-          <h3 className="gold-text text-lg font-bold">À retenir</h3>
+          <h3 className="gold-text text-lg font-bold">{learningText('À retenir', lang)}</h3>
           <ul className="mt-3 list-disc space-y-2 ps-5 text-sm leading-relaxed text-muted-foreground">
             <li>Pour une dizaine exacte, comme <strong>30 ou 50</strong>, on utilise uniquement le nom de la dizaine.</li>
             <li>Pour un nombre comme <strong>32 ou 56</strong>, on dit <strong>l’unité, puis « wa », puis la dizaine</strong>.</li>
@@ -1287,7 +1283,7 @@ function LessonOneView({ onOpen, onBack }: { onOpen: (v: View) => void; onBack: 
     else if (id === 'shadda') onOpen({ kind: 'shadda' })
   }
   return <div>
-    <BackBar title={`${lang === 'ar' ? 'الدرس' : lang === 'en' ? 'Lesson' : 'Leçon'} 1 · ${lang === 'ar' ? 'الأبجدية' : lang === 'en' ? 'The alphabet' : 'L’alphabet'}`} onBack={onBack} />
+    <BackBar title={`${learningText('Leçon', lang)} 1 · ${learningText('L’alphabet', lang)}`} onBack={onBack} />
     <div className="space-y-3 px-5 pb-8 pt-5">
       {topics.map((topic) => {
         const Icon = ICONS[topic.icon] ?? Type
@@ -1317,26 +1313,26 @@ function LearnMenu({ onOpen }: { onOpen: (v: View) => void }) {
   const lessonGroups = [
     {
       number: 1,
-      title: lang === 'ar' ? 'الأبجدية' : lang === 'en' ? 'The alphabet' : 'L’alphabet',
-      description: lang === 'ar' ? 'الحروف وأشكالها وجميع العلامات' : lang === 'en' ? 'Letters, their forms and all signs' : 'Les lettres, leurs formes et tous les signes',
+      title: learningText('L’alphabet', lang),
+      description: learningText('Les lettres, leurs formes et tous les signes', lang),
       topicIds: ['alphabet', 'positions', 'short-vowels', 'long-vowels', 'tanwin', 'shadda'],
     },
     {
       number: 2,
-      title: lang === 'ar' ? 'القراءة' : lang === 'en' ? 'Reading' : 'Lecture',
-      description: lang === 'ar' ? 'قراءة الكلمات ثم الجمل والنصوص القصيرة' : lang === 'en' ? 'Read words, sentences, then short texts' : 'Lire des mots, des phrases, puis des textes courts',
+      title: learningText('Lecture', lang),
+      description: learningText('Lire des mots, des phrases, puis des textes courts', lang),
       topicIds: [],
     },
     {
       number: 3,
-      title: lang === 'ar' ? 'المفردات الأساسية' : lang === 'en' ? 'Essential vocabulary' : 'Vocabulaire essentiel',
-      description: lang === 'ar' ? 'تعلّم الكلمات المفيدة مرتبة حسب الموضوع' : lang === 'en' ? 'Learn useful words grouped by theme' : 'Apprendre les mots utiles, regroupés par thèmes',
+      title: learningText('Vocabulaire essentiel', lang),
+      description: learningText('Apprendre les mots utiles, regroupés par thèmes', lang),
       topicIds: [],
     },
     {
       number: 4,
-      title: lang === 'ar' ? 'القواعد وتصريف الأفعال' : lang === 'en' ? 'Grammar and conjugation' : 'Grammaire et conjugaison',
-      description: lang === 'ar' ? 'فهم بنية الجملة واستخدام الأفعال' : lang === 'en' ? 'Understand sentence structure and use verbs' : 'Comprendre la phrase et apprendre à utiliser les verbes',
+      title: learningText('Grammaire et conjugaison', lang),
+      description: learningText('Comprendre la phrase et apprendre à utiliser les verbes', lang),
       topicIds: [],
     },
   ]
@@ -1352,7 +1348,7 @@ function LearnMenu({ onOpen }: { onOpen: (v: View) => void }) {
             <button type="button" onClick={() => lesson.number === 1 ? onOpen({ kind: 'lesson-one' }) : onOpen({ kind: 'empty-lesson', number: lesson.number as 2 | 3 | 4 })} className="flex w-full items-center gap-4 p-5 text-start active:bg-secondary/40">
               <span className="gold-gradient flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-lg font-bold text-primary-foreground">{lesson.number}</span>
               <span className="min-w-0 flex-1">
-                <span className="text-xs font-semibold uppercase tracking-wider text-primary">{lang === 'ar' ? 'الدرس' : lang === 'en' ? 'Lesson' : 'Leçon'} {lesson.number}</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-primary">{learningText('Leçon', lang)} {lesson.number}</span>
                 <span className="gold-text block text-lg font-bold">{lesson.title}</span>
                 <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">{lesson.description}</span>
                 <span className="mt-3 flex items-center gap-2"><ProgressBar value={lessonProgress} className="h-1.5 flex-1" /><span className="gold-text text-[11px] font-bold">{lessonProgress}%</span></span>
@@ -2574,8 +2570,8 @@ function RulesView({
     const isWordPage = shortStep > 0 && shortStep % 2 === 0
     const isSukunPage = shortStep === vowelPages.length * 2 + 1
     const isSukunWordsPage = shortStep === vowelPages.length * 2 + 2
-    const previousLabel = lang === 'ar' ? 'السابق' : lang === 'en' ? 'Previous' : 'Précédent'
-    const nextLabel = lang === 'ar' ? 'التالي' : lang === 'en' ? 'Next' : 'Suivant'
+    const previousLabel = learningText('Précédent', lang)
+    const nextLabel = learningText('Suivant', lang)
 
     return (
       <div>
@@ -2623,8 +2619,8 @@ function RulesView({
   if (topic === 'long-vowels') {
     const vowelPages: LongVowelKey[] = ['fatha', 'kasra', 'damma']
     const activeVowel = longStep > 0 ? vowelPages[longStep - 1] : undefined
-    const previousLabel = lang === 'ar' ? 'السابق' : lang === 'en' ? 'Previous' : 'Précédent'
-    const nextLabel = lang === 'ar' ? 'التالي' : lang === 'en' ? 'Next' : 'Suivant'
+    const previousLabel = learningText('Précédent', lang)
+    const nextLabel = learningText('Suivant', lang)
 
     return (
       <div>
@@ -2653,8 +2649,8 @@ function RulesView({
   if (topic === 'tanwin') {
     const tanwinPages: TanwinPageKey[] = ['fatha', 'kasra', 'damma']
     const activeTanwin = tanwinStep > 0 ? tanwinPages[tanwinStep - 1] : undefined
-    const previousLabel = lang === 'ar' ? 'السابق' : lang === 'en' ? 'Previous' : 'Précédent'
-    const nextLabel = lang === 'ar' ? 'التالي' : lang === 'en' ? 'Next' : 'Suivant'
+    const previousLabel = learningText('Précédent', lang)
+    const nextLabel = learningText('Suivant', lang)
 
     return (
       <div>
